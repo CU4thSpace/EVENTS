@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <link rel="stylesheet" href="https://use.typekit.net/paf7uxj.css"> <!-- Adobe Fonts for Gill -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400&display=swap" rel="stylesheet">
+    <title>4th Space CLOCK</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: "gill-sans-nova-condensed", sans-serif;
+             background: #111;
+              display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: transparent;
+            margin: 0;
+        }
+        #clock {
+            font-size: 6rem; /* Font size is now twice as big */
+          color: #fff;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="clock"></div>
+
+    <script>
+        function updateClock() {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            document.getElementById('clock').textContent = `${hours}:${minutes}:${seconds}`;
+        }
+
+        setInterval(updateClock, 1000);
+        updateClock(); // Initial call to display time immediately
+
+        // Refresh the page every 30 seconds
+        setTimeout(function() {
+            location.reload();
+        }, 30000); // 30,000 milliseconds = 30 seconds
+    </script>
+
+</body>
+</html>
