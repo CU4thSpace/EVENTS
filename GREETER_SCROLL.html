@@ -82,21 +82,22 @@
 
     async function fetchRSSFeed(url) {
       try {
-        const timestamp = Date.now();
-        const fullUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(url)}&t=${timestamp}`;
-        const response = await fetch(fullUrl, { cache: "no-store" });
-        const data = await response.json();
+        const response = await fetch(url, { cache: "no-store" });
+        const xmlText = await response.text();
+        const parser = new DOMParser();
+        const xmlDoc = parser.parseFromString(xmlText, "application/xml");
+        const items = [...xmlDoc.querySelectorAll("item")];
+        displayFeed(items);
         document.getElementById("scroll-container").scrollTop = 0;
-        displayFeed(data.items);
       } catch (error) {
         console.error("Error fetching RSS feed:", error);
         document.getElementById("rss-feed").textContent = "Failed to load feed.";
       }
     }
 
-    function extractImageFromDescription(description) {
+    function extractImageFromDescription(descriptionHTML) {
       const tempDiv = document.createElement("div");
-      tempDiv.innerHTML = description;
+      tempDiv.innerHTML = descriptionHTML;
       const imgTag = tempDiv.querySelector("img");
       let imgSrc = "";
       if (imgTag) {
@@ -111,10 +112,12 @@
       feedContainer.innerHTML = "";
 
       items.forEach(item => {
+        const title = item.querySelector("title")?.textContent || "No title";
+        const description = item.querySelector("description")?.textContent || "";
+        const { imgSrc, cleanedDescription } = extractImageFromDescription(description);
+
         const newsItem = document.createElement("div");
         newsItem.classList.add("news-item");
-
-        const { imgSrc, cleanedDescription } = extractImageFromDescription(item.description);
 
         if (imgSrc) {
           const image = document.createElement("img");
@@ -126,9 +129,50 @@
         const overlay = document.createElement("div");
         overlay.classList.add("news-overlay");
 
-        const title = document.createElement("div");
-        title.classList.add("news-title");
-        title.textContent = item.title;
+        const titleDiv = document.createElement("div");
+        titleDiv.classList.add("news-title");
+        titleDiv.textContent = title;
 
-        const description = document.createElement("div");
-        description.classList.add("news-description");
+        const descriptionDiv = document.createElement("div");
+        descriptionDiv.classList.add("news-description");
+        descriptionDiv.innerHTML = cleanedDescription || "No description available.";
+
+        overlay.appendChild(titleDiv);
+        overlay.appendChild(descriptionDiv);
+        newsItem.appendChild(overlay);
+
+        feedContainer.appendChild(newsItem);
+      });
+
+      // Clone for seamless scroll
+      const scrollContainer = document.getElementById("scroll-container");
+      const existingClones = scrollContainer.querySelectorAll("#rss-feed + #rss-feed");
+      existingClones.forEach(clone => clone.remove());
+      const clone = feedContainer.cloneNode(true);
+      scrollContainer.appendChild(clone);
+    }
+
+    window.addEventListener("load", () => {
+      fetchRSSFeed(RSS_URL);
+      setInterval(() => fetchRSSFeed(RSS_URL), 300000); // 5 min
+
+      const scrollContainer = document.getElementById("scroll-container");
+      const scrollSpeed = 1;
+      const scrollDelay = 30;
+
+      function autoScroll() {
+        scrollContainer.scrollTop += scrollSpeed;
+
+        const originalFeed = document.getElementById("rss-feed");
+        if (scrollContainer.scrollTop >= originalFeed.scrollHeight) {
+          scrollContainer.scrollTop = 0;
+        }
+
+        setTimeout(autoScroll, scrollDelay);
+      }
+
+      autoScroll();
+    });
+  </script>
+</body>
+</html>
