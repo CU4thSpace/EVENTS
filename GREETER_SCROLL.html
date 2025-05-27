@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <link rel="stylesheet" href="https://use.typekit.net/paf7uxj.css">
+  <link rel="stylesheet" href="https://use.typekit.net/paf7uxj.css">
   <title>4thSpace Events Upcoming</title>
   <style>
     html, body {
@@ -13,15 +13,8 @@
       overflow: hidden;
       background-color: black;
       color: white;
- 	font-family: "gill-sans-nova-condensed", sans-serif;
+      font-family: "gill-sans-nova-condensed", sans-serif;
     }
-
-	h2 {
-	font-family: gill-sans-nova, sans-serif;
-font-weight: 300;
-font-style: italic;
-	  	font-size: 22px;
-	}
 
     #scroll-container {
       height: 100vh;
@@ -35,51 +28,48 @@ font-style: italic;
       padding: 40px 0;
     }
 
-.news-item {
-  position: relative;
-  margin-bottom: 30px;
-  border-radius: 10px;
-  overflow: hidden;
-  border: 2px solid #444;
-  height: 300px; /* adjust as needed */
-}
+    .news-item {
+      position: relative;
+      margin-bottom: 30px;
+      border-radius: 10px;
+      overflow: hidden;
+      border: 2px solid #444;
+      height: 300px;
+    }
 
-.news-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
+    .news-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
 
-.news-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.6); /* dark overlay */
-  color: white;
-  display: flex;
-  flex-direction: column;
-  justify-content: center; /* vertical center */
-  align-items: center;     /* horizontal center */
-  text-align: center;      /* center text inside elements */
-  padding: 20px;
-  box-sizing: border-box;
-}
+    .news-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.6);
+      color: white;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 20px;
+      box-sizing: border-box;
+    }
 
-.news-title {
-font-family: "gill-sans-nova-condensed", sans-serif;
-  font-size: 66px;
-  margin-bottom: 10px;
-}
+    .news-title {
+      font-size: 66px;
+      margin-bottom: 10px;
+    }
 
-.news-description {
-font-family: "gill-sans-nova-condensed", sans-serif;
-  font-size: 33px;
-  opacity: 0.9;
-}
-
+    .news-description {
+      font-size: 33px;
+      opacity: 0.9;
+    }
   </style>
 </head>
 <body>
@@ -88,32 +78,15 @@ font-family: "gill-sans-nova-condensed", sans-serif;
   </div>
 
   <script>
-
-// this part Defines the Feed URL and gives it a timestamp so broswer, brightsign and the rss2json processing..
-  
     const RSS_URL = "https://www.concordia.ca/content/concordia/en/next-gen/4th-space/programming/RSSCAL/_jcr_content/content-main/grid_container_671899525/grid-container-parsys/events_list.xml";
-
-async function fetchRSSFeed(url) {
-  try {
-    const timestamp = Date.now(); // current time in ms
-    const fullUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(url)}&t=${timestamp}`;
-    const response = await fetch(fullUrl, { cache: "no-store" });
-    const data = await response.json();
-    document.getElementById("scroll-container").scrollTo(0, 0);
-    displayFeed(data.items);
-  } catch (error) {
-    console.error("Error fetching RSS feed:", error);
-    document.getElementById("rss-feed").textContent = "Failed to load feed.";
-  }
-}
-
-    
 
     async function fetchRSSFeed(url) {
       try {
-        const response = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(url)}`);
+        const timestamp = Date.now();
+        const fullUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(url)}&t=${timestamp}`;
+        const response = await fetch(fullUrl, { cache: "no-store" });
         const data = await response.json();
-        document.getElementById("scroll-container").scrollTo(0, 0); // Reset scroll to top
+        document.getElementById("scroll-container").scrollTop = 0;
         displayFeed(data.items);
       } catch (error) {
         console.error("Error fetching RSS feed:", error);
@@ -141,74 +114,21 @@ async function fetchRSSFeed(url) {
         const newsItem = document.createElement("div");
         newsItem.classList.add("news-item");
 
+        const { imgSrc, cleanedDescription } = extractImageFromDescription(item.description);
+
+        if (imgSrc) {
+          const image = document.createElement("img");
+          image.classList.add("news-image");
+          image.src = imgSrc;
+          newsItem.appendChild(image);
+        }
+
+        const overlay = document.createElement("div");
+        overlay.classList.add("news-overlay");
+
         const title = document.createElement("div");
         title.classList.add("news-title");
         title.textContent = item.title;
 
-        const { imgSrc, cleanedDescription } = extractImageFromDescription(item.description);
-
         const description = document.createElement("div");
         description.classList.add("news-description");
-        description.innerHTML = cleanedDescription || "No description available.";
-
-        const image = document.createElement("img");
-        image.classList.add("news-image");
-
-        if (imgSrc) {
-          image.src = imgSrc;
-        } else {
-          image.style.display = "none";
-        }
-
-       if (imgSrc) {
-  image.src = imgSrc;
-  newsItem.appendChild(image);
-}
-
-const overlay = document.createElement("div");
-overlay.classList.add("news-overlay");
-
-overlay.appendChild(title);
-overlay.appendChild(description);
-newsItem.appendChild(overlay);
-
-
-        feedContainer.appendChild(newsItem);
-      });
-    }
-
-    // Initial fetch
-    fetchRSSFeed(RSS_URL);
-    
-
-
-
-    // Refresh every 5 minutes
-    setInterval(() => {
-      fetchRSSFeed(RSS_URL);
-    }, 300000); // 5 minutes
-    
-
-
-    // Continuous vertical scroll
-window.addEventListener('load', function () {
-  const scrollContainer = document.getElementById("scroll-container");
-  const scrollSpeed = 1;     // pixels per step
-  const scrollDelay = 30;    // ms between steps
-
-  function autoScroll() {
-    scrollContainer.scrollTop += scrollSpeed;
-
-    // When reaching the bottom, scroll back to top
-    if (scrollContainer.scrollTop + scrollContainer.clientHeight >= scrollContainer.scrollHeight) {
-      scrollContainer.scrollTop = 0;
-    }
-
-    setTimeout(autoScroll, scrollDelay);
-  }
-
-  autoScroll();
-});
-  </script>
-</body>
-</html>
