@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <link rel="stylesheet" href="https://use.typekit.net/paf7uxj.css">
-  <title>4thSpace Events Upcoming</title>
+  <link rel="stylesheet" href="https://use.typekit.net/paf7uxj.css">
+  <title>4thSpace Events Scrolling</title>
   <style>
     html, body {
       margin: 0;
@@ -13,15 +13,8 @@
       overflow: hidden;
       background-color: black;
       color: white;
- 	font-family: "gill-sans-nova-condensed", sans-serif;
+      font-family: "gill-sans-nova-condensed", sans-serif;
     }
-
-	h2 {
-	font-family: gill-sans-nova, sans-serif;
-font-weight: 300;
-font-style: italic;
-	  	font-size: 22px;
-	}
 
     #scroll-container {
       height: 100vh;
@@ -35,51 +28,63 @@ font-style: italic;
       padding: 40px 0;
     }
 
-.news-item {
-  position: relative;
-  margin-bottom: 30px;
-  border-radius: 10px;
-  overflow: hidden;
-  border: 2px solid #444;
-  height: 300px; /* adjust as needed */
-}
+    .news-item {
+      position: relative;
+      margin-bottom: 30px;
+      border-radius: 10px;
+      overflow: hidden;
+      border: 2px solid #444;
+      height: 300px;
+    }
 
-.news-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
+    .news-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
 
-.news-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.6); /* dark overlay */
-  color: white;
-  display: flex;
-  flex-direction: column;
-  justify-content: center; /* vertical center */
-  align-items: center;     /* horizontal center */
-  text-align: center;      /* center text inside elements */
-  padding: 20px;
-  box-sizing: border-box;
-}
+    .news-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.6);
+      color: white;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 20px;
+      box-sizing: border-box;
+    }
 
-.news-title {
-font-family: "gill-sans-nova-condensed", sans-serif;
-  font-size: 66px;
-  margin-bottom: 10px;
-}
+    .news-title {
+      font-family: "gill-sans-nova-condensed", sans-serif;
+      font-size: 66px;
+      margin-bottom: 10px;
+    }
 
-.news-description {
-font-family: "gill-sans-nova-condensed", sans-serif;
-  font-size: 33px;
-  opacity: 0.9;
+    .news-description {    // this styles the Date which isnt wrapped in tags
+      font-family: "gill-sans-nova-condensed", sans-serif;
+      font-size: 22px;
+      opacity: 0.9;
+    }
+    
+    .news-description h2 {   // this styles the description which gets wrapped in h2 tags
+  font-family: gill-sans-nova, sans-serif;
+  font-weight: 300;
+  font-style: italic;
+  font-size: 22px;
+  margin: 0 0 10px 0;
+  opacity: 0.8;
 }
-
+    
+    
+    
+    
   </style>
 </head>
 <body>
@@ -87,7 +92,7 @@ font-family: "gill-sans-nova-condensed", sans-serif;
     <div id="rss-feed"></div>
   </div>
 
- <script>
+  <script>
     const RSS_URL = "https://www.concordia.ca/content/concordia/en/next-gen/4th-space/programming/RSSCAL/_jcr_content/content-main/grid_container_671899525/grid-container-parsys/events_list.xml";
 
     function decodeEntities(str = "") {
