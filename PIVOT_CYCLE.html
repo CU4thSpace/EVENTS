@@ -163,9 +163,12 @@ const titleDiv = document.createElement('div');
 titleDiv.className = 'event-title';
 titleDiv.textContent = title;
 
+// Append first so computed styles don't override
+overlay.appendChild(titleDiv);
+
 if (title.length > maxLength) {
   const scale = Math.max(0.7, maxLength / title.length); // minimum 70% size
-  titleDiv.style.setProperty('font-size', `${(baseFontSize * scale).toFixed(1)}rem`, 'important');
+  titleDiv.style.fontSize = `${(baseFontSize * scale).toFixed(1)}rem`;
 
 // end of shrinker section for title
         
