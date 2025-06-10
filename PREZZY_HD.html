@@ -13,6 +13,12 @@
       background: #111;
     }
 
+        #clock {
+            font-size: 6rem; /* Font size is now twice as big */
+          color: #fff;
+        }
+
+    
     .event-container {
       position: relative;
       height: 100vh;
@@ -114,11 +120,34 @@
   </style>
 </head>
 <body>
+    <div id="clock"></div>
+
+  
 
   <div id="loadingSpinner">Loading events…</div>
   <div class="event-container" id="eventContainer"></div>
 
   <script>
+// clock stuff
+        function updateClock() {   
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            document.getElementById('clock').textContent = `${hours}:${minutes}:${seconds}`;
+        }
+
+        setInterval(updateClock, 1000);
+        updateClock(); // Initial call to display time immediately
+
+        // Refresh the page every 30 seconds
+        setTimeout(function() {
+            location.reload();
+        }, 30000); // 30,000 milliseconds = 30 seconds
+
+
+
+    
     async function fetchAndDisplayEvents() {
       const response = await fetch('https://www.concordia.ca/content/concordia/en/next-gen/4th-space/programming/RSSCAL/_jcr_content/content-main/grid_container_671899525/grid-container-parsys/events_list.xml');
       const text = await response.text();
