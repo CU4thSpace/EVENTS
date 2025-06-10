@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <link rel="stylesheet" href="https://use.typekit.net/paf7uxj.css"> <!-- Adobe Fonts for Gill -->
-  <meta http-equiv="refresh" content="3600"> <!-- Refreshes the page every hour or 3600 seconds -->
+  <meta http-equiv="refresh" content="3600"> <!-- Refreshes the page every hour -->
   <title>Concordia 4th Space Events</title>
   <style>
     body {
@@ -130,25 +130,20 @@
   <div id="loadingSpinner">Loading events…</div>
   <div class="event-container" id="eventContainer"></div>
   <script>
-// clock stuff
-        function updateClock() {   
-            const now = new Date();
-            const hours = String(now.getHours()).padStart(2, '0');
-            const minutes = String(now.getMinutes()).padStart(2, '0');
-            const seconds = String(now.getSeconds()).padStart(2, '0');
-            document.getElementById('clock').textContent = `${hours}:${minutes}:${seconds}`;
-        }
+    // Clock updates every second
+    function updateClock() {   
+      const now = new Date();
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      const seconds = String(now.getSeconds()).padStart(2, '0');
+      document.getElementById('clock').textContent = `${hours}:${minutes}:${seconds}`;
+    }
 
-        setInterval(updateClock, 3600);
-        updateClock(); // Initial call to display time immediately
+    // Update clock every second, not every hour
+    setInterval(updateClock, 1000);
+    updateClock(); // Initial call to display time immediately
 
-        // Refresh the page every 30 seconds
-        setTimeout(function() {
-            location.reload();
-        }, 600000); // 30,000 milliseconds = 30 seconds
-
-
-
+    // Removed the additional JavaScript refresh - only using meta refresh for hourly updates
     
     async function fetchAndDisplayEvents() {
       const response = await fetch('https://www.concordia.ca/content/concordia/en/next-gen/4th-space/programming/RSSCAL/_jcr_content/content-main/grid_container_671899525/grid-container-parsys/events_list.xml');
@@ -205,13 +200,15 @@
         container.appendChild(eventDiv);
         eventDivs.push(eventDiv);
 
-        const imgLoader = new Image();
-        const imgPromise = new Promise(resolve => {
-          imgLoader.onload = resolve;
-          imgLoader.onerror = resolve;
-          imgLoader.src = imageUrl;
-        });
-        imagePromises.push(imgPromise);
+        if (imageUrl) {
+          const imgLoader = new Image();
+          const imgPromise = new Promise(resolve => {
+            imgLoader.onload = resolve;
+            imgLoader.onerror = resolve;
+            imgLoader.src = imageUrl;
+          });
+          imagePromises.push(imgPromise);
+        }
       });
 
       await Promise.all(imagePromises);
