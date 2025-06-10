@@ -139,13 +139,13 @@
             document.getElementById('clock').textContent = `${hours}:${minutes}:${seconds}`;
         }
 
-        setInterval(updateClock, 1000);
+        setInterval(updateClock, 3600);
         updateClock(); // Initial call to display time immediately
 
         // Refresh the page every 30 seconds
         setTimeout(function() {
             location.reload();
-        }, 30000); // 30,000 milliseconds = 30 seconds
+        }, 600000); // 30,000 milliseconds = 30 seconds
 
 
 
