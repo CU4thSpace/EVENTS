@@ -12,16 +12,17 @@
       font-family: "gill-sans-nova-condensed", sans-serif;
       background: #111;
     }
-
-        #clock {
-    font-size: 3rem;
-    color: #fff;
-    position: absolute;      /* Change from fixed to absolute */
-    bottom: 720px;           /* Just above event-title (600px + some spacing) */
-    left: 100px;             /* Same left alignment as event-title */
-    z-index: 10;
-        }
-
+    
+    #clock {
+      font-size: 3rem;
+      color: #fff;
+      position: fixed;          /* Fixed position so it stays in place */
+      bottom: 720px;            /* Just above where event-title appears */
+      left: 100px;              /* Same left alignment as event-title */
+      z-index: 10;              /* Above other elements */
+      font-family: "gill-sans-nova-condensed", sans-serif;  /* Match the font */
+      font-weight: bold;        /* Match event-title weight */
+    }
     
     .event-container {
       position: relative;
@@ -32,7 +33,7 @@
       margin: 0;
       box-sizing: border-box;
     }
-
+    
     .event {
       position: absolute;
       top: 0;
@@ -51,13 +52,13 @@
       box-sizing: border-box;
       overflow: hidden;
     }
-
+    
     .event.visible {
       opacity: 1.0; 
       z-index: 1;
       pointer-events: auto;
     }
-
+    
     .event::before {
       content: "";
       position: absolute;
@@ -69,7 +70,7 @@
       opacity: 0.5; /* SET THE BACKGROUND IMAGE OPACITY HERE */
       z-index: 0;
     }
-
+    
     .event-overlay {
       position: absolute;
       width: 1920px;
@@ -78,7 +79,7 @@
       left: 0;
       z-index: 1;
     }
-
+    
     .event-title {
       position: absolute;
       bottom: 600px;
@@ -90,7 +91,7 @@
       opacity: 1.0;
       color: #fff;
     }
-
+    
     .event-description {
       position: absolute;
       bottom: 400px;
@@ -101,7 +102,7 @@
       opacity: 0.0;
       color: #ccc;
     }
-
+    
     .event-time {
       position: absolute;
       bottom: 200px;
@@ -111,7 +112,7 @@
       opacity: 0.0;
       line-height: 1.2;
     }
-
+    
     #loadingSpinner {
       position: fixed;
       top: 50%;
@@ -124,15 +125,9 @@
   </style>
 </head>
 <body>
-    
-
-  
-
+  <div id="clock"></div>
   <div id="loadingSpinner">Loading events…</div>
-  <div class="event-container" id="eventContainer">
-<div id="clock"></div>
-</div>
-
+  <div class="event-container" id="eventContainer"></div>
   <script>
 // clock stuff
         function updateClock() {   
