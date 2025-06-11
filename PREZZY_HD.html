@@ -13,18 +13,17 @@
       background: #111;
     }
     
-    #clock {
-      font-size: 3rem;
-      color: #fff;
-      position: fixed;          /* Fixed position so it stays in place */
-      letter-spacing: 0;
-      bottom: 2000px;            /* Just above where event-title appears */
-      left: 98px;              /* Same left alignment as event-title */
-      z-index: 10;              /* Above other elements */
-      font-family: "gill-sans-nova-condensed", sans-serif;  /* Match the font */
-      /* font-weight: bold;     to Match event-title weight */
-    }
-    
+   #clock {
+  font-size: 3rem;
+  color: #fff;
+  position: fixed;
+  bottom: 200px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  font-family: "gill-sans-nova-condensed", sans-serif;
+}
+
     .event-container {
       position: relative;
       height: 100vh;
