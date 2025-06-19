@@ -111,6 +111,17 @@
       font-size: 2rem;
       font-family: sans-serif;
     }
+
+.emoji-eye { /* styles the emoji eyes to match the title */
+  width: 1em;
+  height: 1em;
+  vertical-align: middle;
+  display: inline-block;
+  margin-bottom: 0; /* if needed to adjust */
+  transform: translateY(0); /* if needed to adjust */
+}
+
+    
   </style>
 </head>
 <body>
@@ -155,14 +166,17 @@ const response = await fetch('https://www.concordia.ca/content/concordia/en/next
 
       const overlay = document.createElement('div');
       overlay.className = 'event-overlay';
+      
 // revised for proportional title length shrinking...
 const maxLength = 25;
 const baseFontSize = 12.3; // rem
 
 const titleDiv = document.createElement('div');
 titleDiv.className = 'event-title';
-titleDiv.textContent = title;
+/* titleDiv.textContent = title; */
+titleDiv.innerHTML = title.replace(/👀/g, '<img src="https://cu4thspace.github.io/EVENTS/emoji-eyes.png" alt="👀" class="emoji-eye">'); // 👈 new line for eyeballs png 
 
+      
 // Append first so computed styles don't override
 overlay.appendChild(titleDiv);
 
@@ -173,7 +187,6 @@ if (title.length > maxLength) {
 // end of shrinker section for title
         
 }
-
 
       const descDiv = document.createElement('div');
       descDiv.className = 'event-description';
