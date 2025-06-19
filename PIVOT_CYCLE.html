@@ -188,38 +188,10 @@
       // Debug: Log the original title to see what we're working with
       console.log('Original title:', JSON.stringify(title));
       
-      // More aggressive replacement to prevent line breaking in L👀K
-      let processedTitle = title;
-      
-      // Try multiple approaches to catch the L👀K/L👀k pattern (case insensitive)
-      const lookPatterns = [
-        /L👀K/gi, // case insensitive
-        /L👀k/g,  // specific lowercase k
-        /L\u{1F440}K/giu, // Unicode escape for eyes emoji
-        /L\u{1F440}k/gu,  // Unicode escape lowercase
-        /L[\u{1F440}]K/giu,
-        /L[\u{1F440}]k/gu,
-        /L.*?👀.*?[Kk]/g,
-        /L\s*👀\s*[Kk]/g
-      ];
-      
-      // Apply each pattern - replace emoji with image and preserve original case
-      lookPatterns.forEach(pattern => {
-        processedTitle = processedTitle.replace(pattern, (match) => {
-          // Replace the emoji with the image within the no-break span
-          const withImage = match.replace(/👀/g, '<img src="https://raw.githubusercontent.com/CU4thSpace/EVENTS/refs/heads/main/emoji-eyes.png" alt="👀" class="emoji-eye">');
-          return `<span class="no-break-look">${withImage}</span>`;
-        });
-      });
-      
-      // If none of the above worked, do a character-by-character approach
-      if (processedTitle.includes('L') && (processedTitle.includes('K') || processedTitle.includes('k')) && processedTitle.includes('👀')) {
-        // Find L followed by emoji followed by K/k and wrap it
-        processedTitle = processedTitle.replace(/L([^LKlk]*👀[^LKlk]*)[Kk]/g, (match) => {
-          const withImage = match.replace(/👀/g, '<img src="https://raw.githubusercontent.com/CU4thSpace/EVENTS/refs/heads/main/emoji-eyes.png" alt="👀" class="emoji-eye">');
-          return `<span class="no-break-look">${withImage}</span>`;
-        });
-      }
+      // Simple and direct replacement - look for L👀k and L👀K patterns
+      let processedTitle = title
+        .replace(/L👀k/g, '<span class="no-break-look">L<img src=\'https://raw.githubusercontent.com/CU4thSpace/EVENTS/refs/heads/main/emoji-eyes.png\' alt=\'👀\' class=\'emoji-eye\'>k</span>')
+        .replace(/L👀K/g, '<span class="no-break-look">L<img src=\'https://raw.githubusercontent.com/CU4thSpace/EVENTS/refs/heads/main/emoji-eyes.png\' alt=\'👀\' class=\'emoji-eye\'>K</span>');
       
       console.log('Processed title:', processedTitle);
       
