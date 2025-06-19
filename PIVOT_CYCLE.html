@@ -174,8 +174,8 @@ const baseFontSize = 12.3; // rem
 const titleDiv = document.createElement('div');
 titleDiv.className = 'event-title';
 /* titleDiv.textContent = title; */
-titleDiv.innerHTML = title.replace(/👀/g, '<span style="white-space: nowrap;"><img src="emoji-eyes.png" alt="👀" class="emoji-eye"></span>');// 👈 new line for eyeballs png 
 
+titleDiv.innerHTML = title.replace(/👀/g, '<span style="white-space:nowrap;"><img src="https://cu4thspace.github.io/EVENTS/emoji-eyes.png" alt="👀" class="emoji-eye"></span>'); // 👈 new line for eyeballs png and to prevent it from linebreaking
 
       
 // Append first so computed styles don't override
