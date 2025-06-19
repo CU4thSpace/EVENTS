@@ -112,15 +112,16 @@
       font-family: sans-serif;
     }
 
-.emoji-eye { /* styles the emoji eyes to match the title */
+.emoji-eye {
   width: 1em;
   height: 1em;
   vertical-align: middle;
   display: inline-block;
-  margin-bottom: 0; /* if needed to adjust */
-  transform: translateY(0); /* if needed to adjust */
-  white-space: nowrap;
+  margin: 0;
+  padding: 0;
+  line-height: 1;
 }
+
   
   </style>
 </head>
@@ -176,7 +177,7 @@ titleDiv.className = 'event-title';
 /* titleDiv.textContent = title; */
       
 
-titleDiv.innerHTML = title.replace(/L👀K/g,'<span style="display:inline-flex; align-items:center; white-space:nowrap;">L<img src="https://cu4thspace.github.io/EVENTS/emoji-eyes.png" alt="👀" class="emoji-eye">K</span>'); // 👈 new line for eyeballs png and to prevent it from linebreaking
+titleDiv.innerHTML = title.replace(/L👀K/g,'<span style="white-space:nowrap; font-size:0;"><span style="font-size:1em;">L</span><img src="https://cu4thspace.github.io/EVENTS/emoji-eyes.png" alt="👀" class="emoji-eye"><span style="font-size:1em;">K</span></span>'); // 👈 new line for eyeballs png and to prevent it from linebreaking
 
 
       
