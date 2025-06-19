@@ -203,10 +203,12 @@
         /L\s*👀\s*[Kk]/g
       ];
       
-      // Apply each pattern - preserve original case
+      // Apply each pattern - replace emoji with image and preserve original case
       lookPatterns.forEach(pattern => {
         processedTitle = processedTitle.replace(pattern, (match) => {
-          return `<span class="no-break-look">${match}</span>`;
+          // Replace the emoji with the image within the no-break span
+          const withImage = match.replace(/👀/g, '<img src="https://raw.githubusercontent.com/CU4thSpace/EVENTS/refs/heads/main/emoji-eyes.png" alt="👀" class="emoji-eye">');
+          return `<span class="no-break-look">${withImage}</span>`;
         });
       });
       
@@ -214,7 +216,8 @@
       if (processedTitle.includes('L') && (processedTitle.includes('K') || processedTitle.includes('k')) && processedTitle.includes('👀')) {
         // Find L followed by emoji followed by K/k and wrap it
         processedTitle = processedTitle.replace(/L([^LKlk]*👀[^LKlk]*)[Kk]/g, (match) => {
-          return `<span class="no-break-look">${match}</span>`;
+          const withImage = match.replace(/👀/g, '<img src="https://raw.githubusercontent.com/CU4thSpace/EVENTS/refs/heads/main/emoji-eyes.png" alt="👀" class="emoji-eye">');
+          return `<span class="no-break-look">${withImage}</span>`;
         });
       }
       
