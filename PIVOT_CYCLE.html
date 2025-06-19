@@ -174,8 +174,9 @@ const baseFontSize = 12.3; // rem
 const titleDiv = document.createElement('div');
 titleDiv.className = 'event-title';
 /* titleDiv.textContent = title; */
+      
 
-titleDiv.innerHTML = title.replace(/L👀K/g, '<span style="white-space:nowrap;">L<img src="https://cu4thspace.github.io/EVENTS/emoji-eyes.png" alt="👀" class="emoji-eye">K</span>'); // 👈 new line for eyeballs png and to prevent it from linebreaking
+titleDiv.innerHTML = title.replace(/L👀K/g,'<span style="display:inline-flex; align-items:center; white-space:nowrap;">L<img src="https://cu4thspace.github.io/EVENTS/emoji-eyes.png" alt="👀" class="emoji-eye">K</span>'); // 👈 new line for eyeballs png and to prevent it from linebreaking
 
 
       
