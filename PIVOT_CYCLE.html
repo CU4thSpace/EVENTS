@@ -123,8 +123,16 @@
 
     /* Prevent line breaks in the L👀K word specifically */
     .no-break-look {
-      white-space: nowrap;
+      white-space: nowrap !important;
       display: inline-block;
+      word-break: keep-all;
+      overflow-wrap: normal;
+    }
+    
+    /* Additional fallback - prevent breaks around emojis in titles */
+    .event-title {
+      word-break: keep-all;
+      overflow-wrap: break-word;
     }
   </style>
 </head>
@@ -177,15 +185,41 @@
       const titleDiv = document.createElement('div');
       titleDiv.className = 'event-title';
 
-      // Enhanced replacement to prevent line breaking in L👀K
-      let processedTitle = title
-        // First handle the emoji version
-        .replace(/L👀K/g, '<span class="no-break-look">L👀K</span>')
-        // Also handle if it's using the image replacement
-        .replace(/L👀K/g, `<span class="no-break-look">L<img src="https://cu4thspace.github.io/EVENTS/emoji-eyes.png" alt="👀" class="emoji-eye">K</span>`)
-        // Handle any other potential variations
-        .replace(/L\s*👀\s*K/g, '<span class="no-break-look">L👀K</span>');
-
+      // Debug: Log the original title to see what we're working with
+      console.log('Original title:', JSON.stringify(title));
+      
+      // More aggressive replacement to prevent line breaking in L👀K
+      let processedTitle = title;
+      
+      // Try multiple approaches to catch the L👀K/L👀k pattern (case insensitive)
+      const lookPatterns = [
+        /L👀K/gi, // case insensitive
+        /L👀k/g,  // specific lowercase k
+        /L\u{1F440}K/giu, // Unicode escape for eyes emoji
+        /L\u{1F440}k/gu,  // Unicode escape lowercase
+        /L[\u{1F440}]K/giu,
+        /L[\u{1F440}]k/gu,
+        /L.*?👀.*?[Kk]/g,
+        /L\s*👀\s*[Kk]/g
+      ];
+      
+      // Apply each pattern - preserve original case
+      lookPatterns.forEach(pattern => {
+        processedTitle = processedTitle.replace(pattern, (match) => {
+          return `<span class="no-break-look">${match}</span>`;
+        });
+      });
+      
+      // If none of the above worked, do a character-by-character approach
+      if (processedTitle.includes('L') && (processedTitle.includes('K') || processedTitle.includes('k')) && processedTitle.includes('👀')) {
+        // Find L followed by emoji followed by K/k and wrap it
+        processedTitle = processedTitle.replace(/L([^LKlk]*👀[^LKlk]*)[Kk]/g, (match) => {
+          return `<span class="no-break-look">${match}</span>`;
+        });
+      }
+      
+      console.log('Processed title:', processedTitle);
+      
       titleDiv.innerHTML = processedTitle;
       
       // Append first so computed styles don't override
