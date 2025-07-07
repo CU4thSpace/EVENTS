@@ -35,11 +35,18 @@
       justify-content: center;
       color: #fff;
       border: 6px solid white;
+      opacity: 0;
+      z-index: 0;
+      pointer-events: none;
+      transition: opacity 3s ease-in-out;
+      background-repeat: no-repeat;
+      box-sizing: border-box;
+    }
+
+    .event.visible {
       opacity: 1;
       z-index: 1;
       pointer-events: auto;
-      background-repeat: no-repeat;
-      box-sizing: border-box;
     }
 
     .event::before {
@@ -131,10 +138,12 @@
 </head>
 <body>
 
-  <div id="loadingSpinner">Loading event…</div>
+  <div id="loadingSpinner">Loading events…</div>
   <div class="event-container" id="eventContainer"></div>
 
 <script>
+  let rotationInterval; // track the rotation interval globally
+
   async function fetchAndDisplayEvents() {
     const response = await fetch('https://www.concordia.ca/content/concordia/en/next-gen/4th-space/programming/RSSCAL/_jcr_content/content-main/grid_container_671899525/grid-container-parsys/events_list.xml', {
       cache: 'no-store'
@@ -142,85 +151,103 @@
     const text = await response.text();
     const parser = new DOMParser();
     const xml = parser.parseFromString(text, 'application/xml');
-    const items = Array.from(xml.querySelectorAll('item')).slice(0, 1); // Only get the first item
+    const items = Array.from(xml.querySelectorAll('item')).slice(0, 6);
 
     const container = document.getElementById('eventContainer');
     container.innerHTML = ''; // 🔁 Clear old events
 
-    if (items.length === 0) {
-      document.getElementById('loadingSpinner').textContent = 'No events found';
-      return;
-    }
+    const imagePromises = [];
+    const eventDivs = [];
 
-    const item = items[0]; // Get the first (and only) item
-    const title = item.querySelector('title')?.textContent || 'Untitled';
-    const descriptionRaw = item.querySelector('description')?.textContent || '';
+    items.forEach(item => {
+      const title = item.querySelector('title')?.textContent || 'Untitled';
+      const descriptionRaw = item.querySelector('description')?.textContent || '';
 
-    const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = descriptionRaw;
-    const img = tempDiv.querySelector('img');
-    const imageUrl = img ? img.src : 'https://via.placeholder.com/300';
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = descriptionRaw;
+      const img = tempDiv.querySelector('img');
+      const imageUrl = img ? img.src : 'https://via.placeholder.com/300';
 
-    const descHeading = tempDiv.querySelector('h2')?.textContent.trim() || '';
-    const descTime = tempDiv.querySelector('p')?.textContent.trim() || '';
+      const descHeading = tempDiv.querySelector('h2')?.textContent.trim() || '';
+      const descTime = tempDiv.querySelector('p')?.textContent.trim() || '';
 
-    const eventDiv = document.createElement('div');
-    eventDiv.className = 'event';
-    eventDiv.style.backgroundImage = `url(${imageUrl})`;
+      const eventDiv = document.createElement('div');
+      eventDiv.className = 'event';
+      eventDiv.style.backgroundImage = `url(${imageUrl})`;
 
-    const overlay = document.createElement('div');
-    overlay.className = 'event-overlay';
-    
-    // revised for proportional title length shrinking...
-    const maxLength = 25;
-    const baseFontSize = 12.3; // rem
+      const overlay = document.createElement('div');
+      overlay.className = 'event-overlay';
+      
+      // revised for proportional title length shrinking...
+      const maxLength = 25;
+      const baseFontSize = 12.3; // rem
 
-    const titleDiv = document.createElement('div');
-    titleDiv.className = 'event-title';
+      const titleDiv = document.createElement('div');
+      titleDiv.className = 'event-title';
 
-    // Debug: Log the original title to see what we're working with
-    console.log('Original title:', JSON.stringify(title));
-    
-    // Simple and direct replacement - look for L👀k and L👀K patterns
-    let processedTitle = title
-      .replace(/L👀k/g, '<span class="no-break-look">L<img src=\'https://raw.githubusercontent.com/CU4thSpace/EVENTS/refs/heads/main/emoji-eyes.png\' alt=\'👀\' class=\'emoji-eye\'>k</span>')
-      .replace(/L👀K/g, '<span class="no-break-look">L<img src=\'https://raw.githubusercontent.com/CU4thSpace/EVENTS/refs/heads/main/emoji-eyes.png\' alt=\'👀\' class=\'emoji-eye\'>K</span>');
-    
-    console.log('Processed title:', processedTitle);
-    
-    titleDiv.innerHTML = processedTitle;
-    
-    // Append first so computed styles don't override
-    overlay.appendChild(titleDiv);
+      // Debug: Log the original title to see what we're working with
+      console.log('Original title:', JSON.stringify(title));
+      
+      // Simple and direct replacement - look for L👀k and L👀K patterns
+      let processedTitle = title
+        .replace(/L👀k/g, '<span class="no-break-look">L<img src=\'https://raw.githubusercontent.com/CU4thSpace/EVENTS/refs/heads/main/emoji-eyes.png\' alt=\'👀\' class=\'emoji-eye\'>k</span>')
+        .replace(/L👀K/g, '<span class="no-break-look">L<img src=\'https://raw.githubusercontent.com/CU4thSpace/EVENTS/refs/heads/main/emoji-eyes.png\' alt=\'👀\' class=\'emoji-eye\'>K</span>');
+      
+      console.log('Processed title:', processedTitle);
+      
+      titleDiv.innerHTML = processedTitle;
+      
+      // Append first so computed styles don't override
+      overlay.appendChild(titleDiv);
 
-    if (title.length > maxLength) {
-      const scale = Math.max(0.7, maxLength / title.length); // minimum 70% size
-      titleDiv.style.fontSize = `${(baseFontSize * scale).toFixed(1)}rem`;
-    }
+      if (title.length > maxLength) {
+        const scale = Math.max(0.7, maxLength / title.length); // minimum 70% size
+        titleDiv.style.fontSize = `${(baseFontSize * scale).toFixed(1)}rem`;
+      }
 
-    const descDiv = document.createElement('div');
-    descDiv.className = 'event-description';
-    descDiv.textContent = descHeading;
+      const descDiv = document.createElement('div');
+      descDiv.className = 'event-description';
+      descDiv.textContent = descHeading;
 
-    const timeDiv = document.createElement('div');
-    timeDiv.className = 'event-time';
-    timeDiv.textContent = descTime;
+      const timeDiv = document.createElement('div');
+      timeDiv.className = 'event-time';
+      timeDiv.textContent = descTime;
 
-    overlay.appendChild(descDiv);
-    overlay.appendChild(timeDiv);
-    eventDiv.appendChild(overlay);
-    container.appendChild(eventDiv);
+      overlay.appendChild(descDiv);
+      overlay.appendChild(timeDiv);
+      eventDiv.appendChild(overlay);
+      container.appendChild(eventDiv);
+      eventDivs.push(eventDiv);
 
-    // Load the image
-    const imgLoader = new Image();
-    const imgPromise = new Promise(resolve => {
-      imgLoader.onload = resolve;
-      imgLoader.onerror = resolve;
-      imgLoader.src = imageUrl;
+      const imgLoader = new Image();
+      const imgPromise = new Promise(resolve => {
+        imgLoader.onload = resolve;
+        imgLoader.onerror = resolve;
+        imgLoader.src = imageUrl;
+      });
+      imagePromises.push(imgPromise);
     });
 
-    await imgPromise;
+    await Promise.all(imagePromises);
     document.getElementById('loadingSpinner').style.display = 'none';
+
+    // Stop previous rotation interval
+    if (rotationInterval) clearInterval(rotationInterval);
+
+    // Show first
+    let currentIndex = 0;
+    if (eventDivs.length > 0) {
+      eventDivs[currentIndex].classList.add('visible');
+    }
+
+    // Start new rotation
+    rotationInterval = setInterval(() => {
+      if (eventDivs.length > 0) {
+        eventDivs[currentIndex].classList.remove('visible');
+        currentIndex = (currentIndex + 1) % eventDivs.length;
+        eventDivs[currentIndex].classList.add('visible');
+      }
+    }, 12000);
   }
 
   fetchAndDisplayEvents(); // initial load
