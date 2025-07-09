@@ -65,26 +65,43 @@
       font-family: "gill-sans-nova-condensed", sans-serif;
       font-size: 66px;
       margin-bottom: 10px;
+      word-break: keep-all;
+      overflow-wrap: break-word;
     }
 
-    .news-description {    // this styles the Date which isnt wrapped in tags
+    .news-description {    /* this styles the Date which isnt wrapped in tags */
       font-family: "gill-sans-nova-condensed", sans-serif;
       font-size: 22px;
       opacity: 0.9;
     }
     
-    .news-description h2 {   // this styles the description which gets wrapped in h2 tags
-  font-family: gill-sans-nova, sans-serif;
-  font-weight: 300;
-  font-style: italic;
-  font-size: 22px;
-  margin: 0 0 10px 0;
-  opacity: 0.8;
-}
-    
-    
-    
-    
+    .news-description h2 {   /* this styles the description which gets wrapped in h2 tags */
+      font-family: gill-sans-nova, sans-serif;
+      font-weight: 300;
+      font-style: italic;
+      font-size: 22px;
+      margin: 0 0 10px 0;
+      opacity: 0.8;
+    }
+
+    .emoji-eye {
+      display: inline-block;
+      width: 1em;
+      height: auto;
+      vertical-align: middle;
+      max-width: 1em;
+      max-height: 1em;
+      object-fit: contain;
+      line-height: 1;
+    }
+
+    /* Prevent line breaks in the L👀K word specifically */
+    .no-break-look {
+      white-space: nowrap !important;
+      display: inline-block;
+      word-break: keep-all;
+      overflow-wrap: normal;
+    }
   </style>
 </head>
 <body>
@@ -99,6 +116,17 @@
       const txt = document.createElement("textarea");
       txt.innerHTML = str;
       return txt.value;
+    }
+
+    function processEmojiEyes(text) {
+      // Process text for emoji eyes replacement
+      console.log('Original text:', JSON.stringify(text));
+      let processedText = text
+        .replace(/L👀k/g, '<span class="no-break-look">L<img src="https://raw.githubusercontent.com/CU4thSpace/EVENTS/refs/heads/main/emoji-eyes.png" alt="👀" class="emoji-eye">k</span>')
+        .replace(/L👀K/g, '<span class="no-break-look">L<img src="https://raw.githubusercontent.com/CU4thSpace/EVENTS/refs/heads/main/emoji-eyes.png" alt="👀" class="emoji-eye">K</span>');
+      
+      console.log('Processed text:', processedText);
+      return processedText;
     }
 
     async function fetchRSSFeed(url) {
@@ -149,7 +177,8 @@
 
         const titleDiv = document.createElement("div");
         titleDiv.classList.add("news-title");
-        titleDiv.textContent = item.title;
+        // Process title for emoji eyes and use innerHTML instead of textContent
+        titleDiv.innerHTML = processEmojiEyes(item.title);
 
         const { imgSrc, cleanedDescription } = extractImageFromDescription(item.description);
 
