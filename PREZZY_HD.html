@@ -173,11 +173,16 @@
         const titleDiv = document.createElement('div');
         titleDiv.className = 'event-title';
         
-        // Process title for emoji eyes replacement
+        // Process title for emoji eyes replacement and add a line break after the colon
         console.log('Original title:', JSON.stringify(title));
-        let processedTitle = title
-          .replace(/L👀k/g, '<span class="no-break-look">L<img src=\'https://raw.githubusercontent.com/CU4thSpace/EVENTS/refs/heads/main/emoji-eyes.png\' alt=\'👀\' class=\'emoji-eye\'>k</span>')
-          .replace(/L👀K/g, '<span class="no-break-look">L<img src=\'https://raw.githubusercontent.com/CU4thSpace/EVENTS/refs/heads/main/emoji-eyes.png\' alt=\'👀\' class=\'emoji-eye\'>K</span>');
+    
+let processedTitle = title
+  .replace(/L👀k:/g, '<span class="no-break-look">L<img src="https://raw.githubusercontent.com/CU4thSpace/EVENTS/refs/heads/main/emoji-eyes.png" alt="👀" class="emoji-eye">k:</span><br>')
+  .replace(/L👀K:/g, '<span class="no-break-look">L<img src="https://raw.githubusercontent.com/CU4thSpace/EVENTS/refs/heads/main/emoji-eyes.png" alt="👀" class="emoji-eye">K:</span><br>')
+  .replace(/L👀k/g, '<span class="no-break-look">L<img src="https://raw.githubusercontent.com/CU4thSpace/EVENTS/refs/heads/main/emoji-eyes.png" alt="👀" class="emoji-eye">k</span>')
+  .replace(/L👀K/g, '<span class="no-break-look">L<img src="https://raw.githubusercontent.com/CU4thSpace/EVENTS/refs/heads/main/emoji-eyes.png" alt="👀" class="emoji-eye">K</span>');
+
+
         
         console.log('Processed title:', processedTitle);
         titleDiv.innerHTML = processedTitle;
