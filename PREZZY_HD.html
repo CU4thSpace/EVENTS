@@ -75,6 +75,8 @@
       line-height: 1;
       opacity: 0.9;
       color: #ccc;
+      word-break: keep-all;
+      overflow-wrap: break-word;
     }
 
     .event-description {
@@ -106,6 +108,25 @@
       color: white;
       font-size: 2rem;
       font-family: sans-serif;
+    }
+
+    .emoji-eye {
+      display: inline-block;
+      width: 1em;
+      height: auto;
+      vertical-align: middle;
+      max-width: 1em;
+      max-height: 1em;
+      object-fit: contain;
+      line-height: 1;
+    }
+
+    /* Prevent line breaks in the L👀K word specifically */
+    .no-break-look {
+      white-space: nowrap !important;
+      display: inline-block;
+      word-break: keep-all;
+      overflow-wrap: normal;
     }
   </style>
 </head>
@@ -151,25 +172,20 @@
         const baseFontSize = 7.5;
         const titleDiv = document.createElement('div');
         titleDiv.className = 'event-title';
-        titleDiv.textContent = title;
+        
+        // Process title for emoji eyes replacement
+        console.log('Original title:', JSON.stringify(title));
+        let processedTitle = title
+          .replace(/L👀k/g, '<span class="no-break-look">L<img src=\'https://raw.githubusercontent.com/CU4thSpace/EVENTS/refs/heads/main/emoji-eyes.png\' alt=\'👀\' class=\'emoji-eye\'>k</span>')
+          .replace(/L👀K/g, '<span class="no-break-look">L<img src=\'https://raw.githubusercontent.com/CU4thSpace/EVENTS/refs/heads/main/emoji-eyes.png\' alt=\'👀\' class=\'emoji-eye\'>K</span>');
+        
+        console.log('Processed title:', processedTitle);
+        titleDiv.innerHTML = processedTitle;
 
         if (title.length > maxLength) {
           const scale = Math.max(0.7, maxLength / title.length);
           titleDiv.style.fontSize = `${(baseFontSize * scale).toFixed(1)}rem`;
         }
-/*
-const descDiv = document.createElement('div');
-descDiv.className = 'event-description';
-descDiv.textContent = descHeading;
-
-const timeDiv = document.createElement('div');
-timeDiv.className = 'event-time';
-timeDiv.textContent = descTime;
-
-overlay.appendChild(descDiv);
-overlay.appendChild(timeDiv);
-*/
-
 
         overlay.appendChild(titleDiv);
         eventDiv.appendChild(overlay);
