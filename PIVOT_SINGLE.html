@@ -181,11 +181,14 @@
     // Debug: Log the original title to see what we're working with
     console.log('Original title:', JSON.stringify(title));
     
-    // Simple and direct replacement - look for L👀k and L👀K patterns
+    // Simple and direct replacement - look for L👀k and L👀K patterns AND line breaks after the Colon
+ 
     let processedTitle = title
-      .replace(/L👀k/g, '<span class="no-break-look">L<img src=\'https://raw.githubusercontent.com/CU4thSpace/EVENTS/refs/heads/main/emoji-eyes.png\' alt=\'👀\' class=\'emoji-eye\'>k</span>')
-      .replace(/L👀K/g, '<span class="no-break-look">L<img src=\'https://raw.githubusercontent.com/CU4thSpace/EVENTS/refs/heads/main/emoji-eyes.png\' alt=\'👀\' class=\'emoji-eye\'>K</span>');
-    
+  .replace(/L👀k:/g, '<span class="no-break-look">L<img src="https://raw.githubusercontent.com/CU4thSpace/EVENTS/refs/heads/main/emoji-eyes.png" alt="👀" class="emoji-eye">k:</span><br>')
+  .replace(/L👀K:/g, '<span class="no-break-look">L<img src="https://raw.githubusercontent.com/CU4thSpace/EVENTS/refs/heads/main/emoji-eyes.png" alt="👀" class="emoji-eye">K:</span><br>')
+  .replace(/L👀k/g, '<span class="no-break-look">L<img src="https://raw.githubusercontent.com/CU4thSpace/EVENTS/refs/heads/main/emoji-eyes.png" alt="👀" class="emoji-eye">k</span>')
+  .replace(/L👀K/g, '<span class="no-break-look">L<img src="https://raw.githubusercontent.com/CU4thSpace/EVENTS/refs/heads/main/emoji-eyes.png" alt="👀" class="emoji-eye">K</span>');
+
     console.log('Processed title:', processedTitle);
     
     titleDiv.innerHTML = processedTitle;
