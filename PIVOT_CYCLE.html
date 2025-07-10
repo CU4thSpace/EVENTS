@@ -178,35 +178,30 @@
       const overlay = document.createElement('div');
       overlay.className = 'event-overlay';
       
-      // revised for proportional title length shrinking...
+      // Process the title for display
+      let processedTitle = title
+        .replace(/L👀k:/g, '<span class="no-break-look">L<img src="https://raw.githubusercontent.com/CU4thSpace/EVENTS/refs/heads/main/emoji-eyes.png" alt="👀" class="emoji-eye">k:</span><br>')
+        .replace(/L👀K:/g, '<span class="no-break-look">L<img src="https://raw.githubusercontent.com/CU4thSpace/EVENTS/refs/heads/main/emoji-eyes.png" alt="👀" class="emoji-eye">K:</span><br>')
+        .replace(/L👀k/g, '<span class="no-break-look">L<img src="https://raw.githubusercontent.com/CU4thSpace/EVENTS/refs/heads/main/emoji-eyes.png" alt="👀" class="emoji-eye">k</span>')
+        .replace(/L👀K/g, '<span class="no-break-look">L<img src="https://raw.githubusercontent.com/CU4thSpace/EVENTS/refs/heads/main/emoji-eyes.png" alt="👀" class="emoji-eye">K</span>');
+
+      // Calculate the effective text length for sizing (count the actual text that will be displayed)
+      const textForSizing = title.replace(/👀/g, ''); // Remove emoji for length calculation
       const maxLength = 25;
       const baseFontSize = 12.3; // rem
 
       const titleDiv = document.createElement('div');
       titleDiv.className = 'event-title';
-
-      // Debug: Log the original title to see what we're working with
-      console.log('Original title:', JSON.stringify(title));
-      
-      // Simple and direct replacement - look for L👀k and L👀K patterns AND line break after the COLON
-    
-      let processedTitle = title
-  .replace(/L👀k:/g, '<span class="no-break-look">L<img src="https://raw.githubusercontent.com/CU4thSpace/EVENTS/refs/heads/main/emoji-eyes.png" alt="👀" class="emoji-eye">k:</span><br>')
-  .replace(/L👀K:/g, '<span class="no-break-look">L<img src="https://raw.githubusercontent.com/CU4thSpace/EVENTS/refs/heads/main/emoji-eyes.png" alt="👀" class="emoji-eye">K:</span><br>')
-  .replace(/L👀k/g, '<span class="no-break-look">L<img src="https://raw.githubusercontent.com/CU4thSpace/EVENTS/refs/heads/main/emoji-eyes.png" alt="👀" class="emoji-eye">k</span>')
-  .replace(/L👀K/g, '<span class="no-break-look">L<img src="https://raw.githubusercontent.com/CU4thSpace/EVENTS/refs/heads/main/emoji-eyes.png" alt="👀" class="emoji-eye">K</span>');
-
-      console.log('Processed title:', processedTitle);
-      
       titleDiv.innerHTML = processedTitle;
-      
-      // Append first so computed styles don't override
-      overlay.appendChild(titleDiv);
 
-      if (title.length > maxLength) {
-        const scale = Math.max(0.7, maxLength / title.length); // minimum 70% size
+      // Apply font size scaling based on actual text length
+      if (textForSizing.length > maxLength) {
+        const scale = Math.max(0.5, maxLength / textForSizing.length); // minimum 50% size, more aggressive scaling
         titleDiv.style.fontSize = `${(baseFontSize * scale).toFixed(1)}rem`;
+        console.log(`Title length: ${textForSizing.length}, Scale: ${scale}, New font size: ${(baseFontSize * scale).toFixed(1)}rem`);
       }
+
+      overlay.appendChild(titleDiv);
 
       const descDiv = document.createElement('div');
       descDiv.className = 'event-description';
