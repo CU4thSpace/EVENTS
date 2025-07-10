@@ -62,7 +62,7 @@
       position: absolute;
       bottom: 800px; /* fixed amount of pixels from the bottom */
       left: 100px; /* fixed distance from the left edge (removed the translateX line that determines centre) */
-      max-width: 600px;   /* limit how wide it can grow so you can control line breaks*/
+      max-width: 800px;   /* limit how wide it can grow so you can control line breaks seems 800 is good for a fixed 1080 display*/
       font-size: 12.3rem;
       font-weight: bold;
       line-height: 0.9;
@@ -187,9 +187,9 @@
     titleDiv.className = 'event-title';
     titleDiv.innerHTML = processedTitle;
 
-    // Apply font size scaling based on actual text length
+    // Apply font size scaling based on actual text length - trying 60?
     if (textForSizing.length > maxLength) {
-      const scale = Math.max(0.5, maxLength / textForSizing.length); // minimum 50% size, more aggressive scaling
+      const scale = Math.max(0.6, maxLength / textForSizing.length); // minimum 50% size, more aggressive scaling
       titleDiv.style.fontSize = `${(baseFontSize * scale).toFixed(1)}rem`;
       console.log(`Title length: ${textForSizing.length}, Scale: ${scale}, New font size: ${(baseFontSize * scale).toFixed(1)}rem`);
     }
