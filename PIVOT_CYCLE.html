@@ -194,9 +194,9 @@
       titleDiv.className = 'event-title';
       titleDiv.innerHTML = processedTitle;
 
-      // Apply font size scaling based on actual text length 0.5 is 50% 
+      // Apply font size scaling based on actual text length 0.5 is 50% - lets try 70% with the max width
       if (textForSizing.length > maxLength) {
-        const scale = Math.max(0.5, maxLength / textForSizing.length); // minimum 50% size, more aggressive scaling
+        const scale = Math.max(0.7, maxLength / textForSizing.length); // minimum 50% size, more aggressive scaling
         titleDiv.style.fontSize = `${(baseFontSize * scale).toFixed(1)}rem`;
         console.log(`Title length: ${textForSizing.length}, Scale: ${scale}, New font size: ${(baseFontSize * scale).toFixed(1)}rem`);
       }
