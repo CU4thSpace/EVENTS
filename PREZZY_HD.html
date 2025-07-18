@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=1920, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="https://use.typekit.net/paf7uxj.css">
   <title>Concordia 4th Space Events</title>
   <style>
@@ -11,6 +11,10 @@
       font-family: "gill-sans-nova-condensed", sans-serif;
       background: #111;
       overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
     }
 
     #zoom-controls {
@@ -41,24 +45,52 @@
 
     .event-container {
       position: relative;
-      width: 1920px;
-      height: 1080px;
+      width: 100vw;
+      height: 100vh;
+      max-width: 1920px;
+      max-height: 1080px;
+      aspect-ratio: 16/9;
       overflow: hidden;
-      margin: 0 auto;
       box-sizing: border-box;
     }
 
-    .event-wrapper {
+    /* Responsive scaling for smaller screens */
+    @media (max-aspect-ratio: 16/9) {
+      .event-container {
+        width: 100vw;
+        height: calc(100vw * 9 / 16);
+      }
+    }
+
+    @media (min-aspect-ratio: 16/9) {
+      .event-container {
+        width: calc(100vh * 16 / 9);
+        height: 100vh;
+      }
+    }
+
+    /* Fixed border that never moves or scales */
+    .border-overlay {
       position: absolute;
       top: 0;
       left: 0;
-      width: 1920px;
-      height: 1080px;
+      width: 100%;
+      height: 100%;
       border: 6px solid white;
-      pointer-events: none;
       box-sizing: border-box;
-      z-index: 2;
+      z-index: 1000;
+      pointer-events: none;
+    }
+
+    /* Container for the zoomable content */
+    .zoom-content {
+      position: absolute;
+      top: 6px;
+      left: 6px;
+      width: calc(100% - 12px);
+      height: calc(100% - 12px);
       overflow: hidden;
+      transform-origin: center center;
     }
 
     .event {
@@ -77,7 +109,6 @@
       background-repeat: no-repeat;
       position: relative;
       box-sizing: border-box;
-      transform-origin: center center;
     }
 
     .event.visible {
@@ -95,18 +126,19 @@
 
     .event-overlay {
       position: absolute;
-      width: 1920px;
-      height: 1080px;
+      width: 100%;
+      height: 100%;
       top: 0;
       left: 0;
+      z-index: 1;
     }
 
     .event-title {
       position: absolute;
-      bottom: 480px;
-      left: 100px;
-      max-width: 1000px;
-      font-size: 7.5rem;
+      bottom: 44.4%; /* Responsive positioning based on percentage */
+      left: 5.2%;
+      max-width: 52%;
+      font-size: clamp(2rem, 7.5vw, 7.5rem); /* Responsive font size */
       font-weight: bold;
       line-height: 1;
       opacity: 0.9;
@@ -117,10 +149,10 @@
 
     .event-description {
       position: absolute;
-      bottom: 250px;
-      left: 100px;
-      max-width: 1400px;
-      font-size: 3.2rem;
+      bottom: 23.1%;
+      left: 5.2%;
+      max-width: 72.9%;
+      font-size: clamp(1rem, 3.2vw, 3.2rem);
       line-height: 1;
       opacity: 0.9;
       color: #ccc;
@@ -128,9 +160,9 @@
 
     .event-time {
       position: absolute;
-      bottom: 100px;
-      left: 100px;
-      font-size: 2.8rem;
+      bottom: 9.3%;
+      left: 5.2%;
+      font-size: clamp(0.8rem, 2.8vw, 2.8rem);
       color: #ccc;
       opacity: 0.9;
       line-height: 1.2;
@@ -168,7 +200,13 @@
 <body>
 
   <div id="loadingSpinner">Loading events…</div>
-  <div class="event-container" id="eventContainer"></div>
+  
+  <div class="event-container" id="eventContainer">
+    <!-- Fixed border overlay that never moves -->
+    <div class="border-overlay"></div>
+    <!-- Zoomable content container -->
+    <div class="zoom-content" id="zoomContent"></div>
+  </div>
 
   <div id="zoom-controls">
     <button class="zoom-button" onclick="changeZoom(-0.1)">−</button>
@@ -177,13 +215,11 @@
 
   <script>
     let zoomLevel = 1;
-    let currentEventElement = null;
 
     function changeZoom(delta) {
       zoomLevel = Math.min(Math.max(zoomLevel + delta, 0.5), 2);
-      if (currentEventElement) {
-        currentEventElement.style.transform = `scale(${zoomLevel})`;
-      }
+      const zoomContent = document.getElementById('zoomContent');
+      zoomContent.style.transform = `scale(${zoomLevel})`;
     }
 
     async function fetchAndDisplayEvents() {
@@ -195,8 +231,8 @@
       const xml = parser.parseFromString(text, 'application/xml');
       const items = Array.from(xml.querySelectorAll('item')).slice(0, 1);
 
-      const container = document.getElementById('eventContainer');
-      container.innerHTML = '';
+      const zoomContent = document.getElementById('zoomContent');
+      zoomContent.innerHTML = '';
 
       const imagePromises = [];
       const eventDivs = [];
@@ -209,11 +245,7 @@
         const img = tempDiv.querySelector('img');
         const imageUrl = img ? img.src : 'https://via.placeholder.com/300';
 
-        // Create the outer wrapper with fixed-size border
-        const eventWrapper = document.createElement('div');
-        eventWrapper.className = 'event-wrapper';
-
-        // Create the zoomable event content
+        // Create the event content (no border here)
         const eventDiv = document.createElement('div');
         eventDiv.className = 'event';
         eventDiv.style.backgroundImage = `url(${imageUrl})`;
@@ -222,7 +254,6 @@
         overlay.className = 'event-overlay';
 
         const maxLength = 25;
-        const baseFontSize = 7.5;
         const titleDiv = document.createElement('div');
         titleDiv.className = 'event-title';
 
@@ -234,15 +265,15 @@
 
         titleDiv.innerHTML = processedTitle;
 
+        // Responsive font sizing based on container width instead of fixed rem
         if (title.length > maxLength) {
           const scale = Math.max(0.7, maxLength / title.length);
-          titleDiv.style.fontSize = `${(baseFontSize * scale).toFixed(1)}rem`;
+          titleDiv.style.fontSize = `clamp(${2 * scale}rem, ${7.5 * scale}vw, ${7.5 * scale}rem)`;
         }
 
         overlay.appendChild(titleDiv);
         eventDiv.appendChild(overlay);
-        eventWrapper.appendChild(eventDiv); // event inside bordered wrapper
-        container.appendChild(eventWrapper);
+        zoomContent.appendChild(eventDiv); // Add directly to zoom content
         eventDivs.push(eventDiv);
 
         const imgLoader = new Image();
@@ -259,15 +290,14 @@
 
       if (eventDivs.length > 0) {
         eventDivs[0].classList.add('visible');
-        currentEventElement = eventDivs[0];
-        // Apply current zoom level to the new event
-        currentEventElement.style.transform = `scale(${zoomLevel})`;
       }
+
+      // Apply current zoom level
+      zoomContent.style.transform = `scale(${zoomLevel})`;
     }
 
     fetchAndDisplayEvents();
-// sets the refresh - currently at 3hours
-    setInterval(fetchAndDisplayEvents, 3 * 60 * 60 * 1000);
+    setInterval(fetchAndDisplayEvents, 3* 60 * 60 * 1000);
   </script>
 
 </body>
