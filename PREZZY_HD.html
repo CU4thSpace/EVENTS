@@ -13,10 +13,6 @@
       overflow: hidden;
     }
 
-    #zoom-wrapper {
-      transform-origin: top left;
-    }
-
     #zoom-controls {
       position: fixed;
       bottom: 20px;
@@ -61,7 +57,8 @@
       border: 6px solid white;
       pointer-events: none;
       box-sizing: border-box;
-      z-index: 1;
+      z-index: 2;
+      overflow: hidden;
     }
 
     .event {
@@ -80,6 +77,7 @@
       background-repeat: no-repeat;
       position: relative;
       box-sizing: border-box;
+      transform-origin: center center;
     }
 
     .event.visible {
@@ -169,10 +167,8 @@
 </head>
 <body>
 
-  <div id="zoom-wrapper">
-    <div id="loadingSpinner">Loading events…</div>
-    <div class="event-container" id="eventContainer"></div>
-  </div>
+  <div id="loadingSpinner">Loading events…</div>
+  <div class="event-container" id="eventContainer"></div>
 
   <div id="zoom-controls">
     <button class="zoom-button" onclick="changeZoom(-0.1)">−</button>
@@ -181,10 +177,13 @@
 
   <script>
     let zoomLevel = 1;
+    let currentEventElement = null;
 
     function changeZoom(delta) {
       zoomLevel = Math.min(Math.max(zoomLevel + delta, 0.5), 2);
-      document.getElementById('zoom-wrapper').style.transform = `scale(${zoomLevel})`;
+      if (currentEventElement) {
+        currentEventElement.style.transform = `scale(${zoomLevel})`;
+      }
     }
 
     async function fetchAndDisplayEvents() {
@@ -260,11 +259,15 @@
 
       if (eventDivs.length > 0) {
         eventDivs[0].classList.add('visible');
+        currentEventElement = eventDivs[0];
+        // Apply current zoom level to the new event
+        currentEventElement.style.transform = `scale(${zoomLevel})`;
       }
     }
 
     fetchAndDisplayEvents();
-    setInterval(fetchAndDisplayEvents, 60 * 60 * 1000);
+// sets the refresh - currently at 3hours
+    setInterval(fetchAndDisplayEvents, 3 * 60 * 60 * 1000);
   </script>
 
 </body>
