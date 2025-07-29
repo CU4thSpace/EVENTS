@@ -82,7 +82,7 @@
       pointer-events: none;
     }
 
-    /* Container for the zoomable content */
+    /* Container for the content */
     .zoom-content {
       position: absolute;
       top: 6px;
@@ -90,7 +90,6 @@
       width: calc(100% - 12px);
       height: calc(100% - 12px);
       overflow: hidden;
-      transform-origin: center center;
     }
 
     .event {
@@ -131,6 +130,7 @@
       top: 0;
       left: 0;
       z-index: 1;
+      transform-origin: 5.2% 44.4%; /* Transform from title position */
     }
 
     .event-title {
@@ -204,7 +204,7 @@
   <div class="event-container" id="eventContainer">
     <!-- Fixed border overlay that never moves -->
     <div class="border-overlay"></div>
-    <!-- Zoomable content container -->
+    <!-- Content container -->
     <div class="zoom-content" id="zoomContent"></div>
   </div>
 
@@ -218,8 +218,12 @@
 
     function changeZoom(delta) {
       zoomLevel = Math.min(Math.max(zoomLevel + delta, 0.5), 2);
-      const zoomContent = document.getElementById('zoomContent');
-      zoomContent.style.transform = `scale(${zoomLevel})`;
+      
+      // Apply zoom only to text overlays, not the background images
+      const overlays = document.querySelectorAll('.event-overlay');
+      overlays.forEach(overlay => {
+        overlay.style.transform = `scale(${zoomLevel})`;
+      });
     }
 
     async function fetchAndDisplayEvents() {
@@ -261,7 +265,8 @@
           .replace(/L👀k:/g, '<span class="no-break-look">L<img src="https://raw.githubusercontent.com/CU4thSpace/EVENTS/refs/heads/main/emoji-eyes.png" alt="👀" class="emoji-eye">k:</span><br>')
           .replace(/L👀K:/g, '<span class="no-break-look">L<img src="https://raw.githubusercontent.com/CU4thSpace/EVENTS/refs/heads/main/emoji-eyes.png" alt="👀" class="emoji-eye">K:</span><br>')
           .replace(/L👀k/g, '<span class="no-break-look">L<img src="https://raw.githubusercontent.com/CU4thSpace/EVENTS/refs/heads/main/emoji-eyes.png" alt="👀" class="emoji-eye">k</span>')
-          .replace(/L👀K/g, '<span class="no-break-look">L<img src="https://raw.githubusercontent.com/CU4thSpace/EVENTS/refs/heads/main/emoji-eyes.png" alt="👀" class="emoji-eye">K</span>');
+          .replace(/L👀K/g, '<span class="no-break-look">L<img src="https://raw.githubusercontent.com/CU4thSpace/EVENTS/refs/heads/main/emoji-eyes.png" alt="👀" class="emoji-eye">K</span>')
+          .replace(/:/g, ':<br>'); // Add line break after any colon
 
         titleDiv.innerHTML = processedTitle;
 
@@ -273,7 +278,7 @@
 
         overlay.appendChild(titleDiv);
         eventDiv.appendChild(overlay);
-        zoomContent.appendChild(eventDiv); // Add directly to zoom content
+        zoomContent.appendChild(eventDiv);
         eventDivs.push(eventDiv);
 
         const imgLoader = new Image();
@@ -292,8 +297,11 @@
         eventDivs[0].classList.add('visible');
       }
 
-      // Apply current zoom level
-      zoomContent.style.transform = `scale(${zoomLevel})`;
+      // Apply current zoom level to text overlays only
+      const overlays = document.querySelectorAll('.event-overlay');
+      overlays.forEach(overlay => {
+        overlay.style.transform = `scale(${zoomLevel})`;
+      });
     }
 
     fetchAndDisplayEvents();
