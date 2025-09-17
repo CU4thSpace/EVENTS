@@ -60,24 +60,28 @@
 
     .event-title {
       position: absolute;
-      bottom: 800px; /* fixed amount of pixels from the bottom */
-      left: 100px; /* fixed distance from the left edge (removed the translateX line that determines centre) */
-      max-width: 800px;   /* limit how wide it can grow so you can control line breaks seems 800 is good for a fixed 1080 display*/
+      bottom: 800px;
+      left: 100px;
+      max-width: 800px;
       font-size: 12.3rem;
       font-weight: bold;
       line-height: 0.9;
       opacity: 0.9;
       color: #ccc;
-      /* text-transform: uppercase;  */ 
+      /* Prevent word breaking within words */
+      word-break: keep-all;
+      overflow-wrap: break-word;
+      hyphens: none;
+      /* Allow line breaks only at spaces and explicit <br> tags */
+      white-space: pre-line;
     }
 
     .event-description {
       position: absolute;
-      bottom: 400px; /* fixed amount of pixels from the bottom */
-      left: 100px; /* fixed distance from the left edge (removed the translateX line that determines centre) */
-      max-width: 900px;   /* limit how wide it can grow so you can control line breaks*/
+      bottom: 400px;
+      left: 100px;
+      max-width: 900px;
       font-size: 5.6rem;
-      /* font-weight: bold; */
       line-height: 0.9;
       opacity: 0.9;
       color: #ccc;
@@ -85,8 +89,8 @@
 
     .event-time {
       position: absolute;
-      bottom: 200px; /* fixed amount of pixels from the bottom */
-      left: 100px; /* fixed distance from the left edge (removed the translateX line that determines centre) */
+      bottom: 200px;
+      left: 100px;
       font-size: 4.6rem;
       color: #ccc;
       opacity: 0.9;
@@ -114,18 +118,11 @@
       line-height: 1;
     }
 
-    /* Prevent line breaks in the L👀K word specifically */
     .no-break-look {
       white-space: nowrap !important;
       display: inline-block;
       word-break: keep-all;
       overflow-wrap: normal;
-    }
-    
-    /* Additional fallback - prevent breaks around emojis in titles */
-    .event-title {
-      word-break: keep-all;
-      overflow-wrap: break-word;
     }
   </style>
 </head>
@@ -138,21 +135,21 @@
   async function fetchAndDisplayEvents() {
     const response = await fetch('https://www.concordia.ca/content/concordia/en/next-gen/4th-space/programming/RSSCAL/_jcr_content/content-main/grid_container_671899525/grid-container-parsys/events_list.xml', {
       cache: 'no-store'
-    }); /* this is the part that tries to prevent caching so that the site updates properly */
+    });
     const text = await response.text();
     const parser = new DOMParser();
     const xml = parser.parseFromString(text, 'application/xml');
-    const items = Array.from(xml.querySelectorAll('item')).slice(0, 1); // Only get the first item
+    const items = Array.from(xml.querySelectorAll('item')).slice(0, 1);
 
     const container = document.getElementById('eventContainer');
-    container.innerHTML = ''; // 🔁 Clear old events
+    container.innerHTML = '';
 
     if (items.length === 0) {
       document.getElementById('loadingSpinner').textContent = 'No events found';
       return;
     }
 
-    const item = items[0]; // Get the first (and only) item
+    const item = items[0];
     const title = item.querySelector('title')?.textContent || 'Untitled';
     const descriptionRaw = item.querySelector('description')?.textContent || '';
 
@@ -171,25 +168,26 @@
     const overlay = document.createElement('div');
     overlay.className = 'event-overlay';
     
-    // Process the title for display
+    // Process the title for display with better word breaking control
     let processedTitle = title
-      .replace(/L👀k:/g, '<span class="no-break-look">L<img src="https://raw.githubusercontent.com/CU4thSpace/EVENTS/refs/heads/main/emoji-eyes.png" alt="👀" class="emoji-eye">k:</span><br>')
-      .replace(/L👀K:/g, '<span class="no-break-look">L<img src="https://raw.githubusercontent.com/CU4thSpace/EVENTS/refs/heads/main/emoji-eyes.png" alt="👀" class="emoji-eye">K:</span><br>')
+      .replace(/L👀k:/g, '<span class="no-break-look">L<img src="https://raw.githubusercontent.com/CU4thSpace/EVENTS/refs/heads/main/emoji-eyes.png" alt="👀" class="emoji-eye">k:</span>\n')
+      .replace(/L👀K:/g, '<span class="no-break-look">L<img src="https://raw.githubusercontent.com/CU4thSpace/EVENTS/refs/heads/main/emoji-eyes.png" alt="👀" class="emoji-eye">K:</span>\n')
       .replace(/L👀k/g, '<span class="no-break-look">L<img src="https://raw.githubusercontent.com/CU4thSpace/EVENTS/refs/heads/main/emoji-eyes.png" alt="👀" class="emoji-eye">k</span>')
       .replace(/L👀K/g, '<span class="no-break-look">L<img src="https://raw.githubusercontent.com/CU4thSpace/EVENTS/refs/heads/main/emoji-eyes.png" alt="👀" class="emoji-eye">K</span>');
 
-    // Calculate the effective text length for sizing (count the actual text that will be displayed)
-    const textForSizing = title.replace(/👀/g, ''); // Remove emoji for length calculation
+    // Smart line breaking: add line breaks at strategic points for better word preservation
+    processedTitle = smartLineBreaking(processedTitle);
+
+    const textForSizing = title.replace(/👀/g, '');
     const maxLength = 25;
-    const baseFontSize = 12.3; // rem
+    const baseFontSize = 12.3;
 
     const titleDiv = document.createElement('div');
     titleDiv.className = 'event-title';
     titleDiv.innerHTML = processedTitle;
 
-    // Apply font size scaling based on actual text length - trying 70 now that max width is larger ?
     if (textForSizing.length > maxLength) {
-      const scale = Math.max(0.7, maxLength / textForSizing.length); // minimum 50% size, more aggressive scaling
+      const scale = Math.max(0.7, maxLength / textForSizing.length);
       titleDiv.style.fontSize = `${(baseFontSize * scale).toFixed(1)}rem`;
       console.log(`Title length: ${textForSizing.length}, Scale: ${scale}, New font size: ${(baseFontSize * scale).toFixed(1)}rem`);
     }
@@ -209,7 +207,6 @@
     eventDiv.appendChild(overlay);
     container.appendChild(eventDiv);
 
-    // Load the image
     const imgLoader = new Image();
     const imgPromise = new Promise(resolve => {
       imgLoader.onload = resolve;
@@ -221,9 +218,21 @@
     document.getElementById('loadingSpinner').style.display = 'none';
   }
 
-  fetchAndDisplayEvents(); // initial load
+  function smartLineBreaking(text) {
+    // Strategy: Insert line breaks at logical points to prevent awkward word breaking
+    // This is a simple version - you can expand this based on your specific needs
+    
+    // Replace multiple spaces with single spaces first
+    text = text.replace(/\s+/g, ' ');
+    
+    // Add strategic line breaks after colons and certain words
+    text = text.replace(/:\s+/g, ':\n');
+    text = text.replace(/\s+(with|and|for|at|in|on)\s+/gi, '\n$1 ');
+    
+    return text;
+  }
 
-  // 🔁 Refresh every 5 minutes
+  fetchAndDisplayEvents();
   setInterval(fetchAndDisplayEvents, 5 * 60 * 1000); 
 </script>
   
