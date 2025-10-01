@@ -1,10 +1,9 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <link rel="stylesheet" href="https://use.typekit.net/paf7uxj.css"> <!-- Adobe Fonts for Gill -->
+  <link rel="stylesheet" href="https://use.typekit.net/paf7uxj.css">
   <title>Concordia 4th Space Events</title>
   <style>
     body {
@@ -69,11 +68,9 @@
       line-height: 0.9;
       opacity: 0.9;
       color: #ccc;
-      /* Prevent word breaking within words */
       word-break: keep-all;
       overflow-wrap: normal;
       hyphens: none;
-      /* Allow line breaks only at spaces and explicit <br> tags */
       white-space: pre-line;
     }
 
@@ -133,6 +130,90 @@
   <div class="event-container" id="eventContainer"></div>
 
 <script>
+  function parseEventTime(timeString) {
+    // Parse time strings like "October 1, 2025, 10 a.m. - 2 p.m."
+    // Returns an object with startTime and endTime Date objects
+    try {
+      // Extract date components
+      const dateMatch = timeString.match(/(\w+)\s+(\d{1,2}),\s+(\d{4})/);
+      let eventDate = new Date();
+      
+      if (dateMatch) {
+        const monthName = dateMatch[1];
+        const day = parseInt(dateMatch[2]);
+        const year = parseInt(dateMatch[3]);
+        const monthMap = {
+          'January': 0, 'February': 1, 'March': 2, 'April': 3, 'May': 4, 'June': 5,
+          'July': 6, 'August': 7, 'September': 8, 'October': 9, 'November': 10, 'December': 11
+        };
+        const month = monthMap[monthName];
+        eventDate = new Date(year, month, day);
+      }
+      
+      // Extract start and end times - handle both "a.m./p.m." and "AM/PM"
+      const timePattern = /(\d{1,2})(?::(\d{2}))?\s*([ap]\.?m\.?)/gi;
+      const matches = Array.from(timeString.matchAll(timePattern));
+      
+      if (matches.length === 0) return { startTime: null, endTime: null };
+
+      const parseTime = (match) => {
+        let hours = parseInt(match[1]);
+        const minutes = match[2] ? parseInt(match[2]) : 0;
+        const meridiem = match[3].toLowerCase().replace(/\./g, '');
+
+        // Convert to 24-hour format
+        if (meridiem === 'pm' && hours !== 12) {
+          hours += 12;
+        } else if (meridiem === 'am' && hours === 12) {
+          hours = 0;
+        }
+
+        return new Date(eventDate.getFullYear(), eventDate.getMonth(), eventDate.getDate(), hours, minutes, 0);
+      };
+
+      const startTime = parseTime(matches[0]);
+      const endTime = matches.length > 1 ? parseTime(matches[1]) : null;
+      
+      console.log('Parsed:', timeString, '→ Start:', startTime, 'End:', endTime);
+      
+      return { startTime, endTime };
+    } catch (e) {
+      console.error('Error parsing time:', e);
+      return { startTime: null, endTime: null };
+    }
+  }
+
+  function findCurrentEvent(events) {
+    const now = new Date();
+    
+    // Sort events by start time
+    const sortedEvents = events.sort((a, b) => {
+      if (!a.startTime || !b.startTime) return 0;
+      return a.startTime - b.startTime;
+    });
+
+    // Find the next event that hasn't ended yet
+    for (let i = 0; i < sortedEvents.length; i++) {
+      const event = sortedEvents[i];
+      if (!event.startTime) continue;
+      
+      // If event has an end time, check if it has ended
+      if (event.endTime) {
+        if (now < event.endTime) {
+          return event;
+        }
+      } else {
+        // No end time, show if it hasn't started yet or just started
+        if (now < event.startTime) {
+          return event;
+        }
+      }
+    }
+
+    // If all events have ended, show the first one (likely tomorrow's first event)
+    return sortedEvents[0];
+  }
+
   async function fetchAndDisplayEvents() {
     const response = await fetch('https://www.concordia.ca/content/concordia/en/next-gen/4th-space/programming/RSSCAL/_jcr_content/content-main/grid_container_671899525/grid-container-parsys/events_list.xml', {
       cache: 'no-store'
@@ -140,7 +221,7 @@
     const text = await response.text();
     const parser = new DOMParser();
     const xml = parser.parseFromString(text, 'application/xml');
-    const items = Array.from(xml.querySelectorAll('item')).slice(0, 1);
+    const items = Array.from(xml.querySelectorAll('item'));
 
     const container = document.getElementById('eventContainer');
     container.innerHTML = '';
@@ -150,36 +231,65 @@
       return;
     }
 
-    const item = items[0];
-    const title = item.querySelector('title')?.textContent || 'Untitled';
-    const descriptionRaw = item.querySelector('description')?.textContent || '';
+    // Parse all events with their times
+    const events = items.map(item => {
+      const title = item.querySelector('title')?.textContent || 'Untitled';
+      const descriptionRaw = item.querySelector('description')?.textContent || '';
 
-    const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = descriptionRaw;
-    const img = tempDiv.querySelector('img');
-    const imageUrl = img ? img.src : 'https://via.placeholder.com/300';
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = descriptionRaw;
+      const img = tempDiv.querySelector('img');
+      const imageUrl = img ? img.src : '';
 
-    const descHeading = tempDiv.querySelector('h2')?.textContent.trim() || '';
-    const descTime = tempDiv.querySelector('p')?.textContent.trim() || '';
+      const descHeading = tempDiv.querySelector('h2')?.textContent.trim() || '';
+      const descTime = tempDiv.querySelector('p')?.textContent.trim() || '';
 
+      const { startTime, endTime } = parseEventTime(descTime);
+
+      return {
+        title,
+        imageUrl,
+        descHeading,
+        descTime,
+        startTime,
+        endTime
+      };
+    });
+
+    // Find which event should be displayed right now
+    const currentEvent = findCurrentEvent(events);
+
+    console.log('Total events:', events.length);
+    console.log('Displaying event:', currentEvent.title, 'at', currentEvent.descTime);
+
+    // Display the current event
+    displayEvent(currentEvent, container);
+
+    document.getElementById('loadingSpinner').style.display = 'none';
+  }
+
+  function displayEvent(eventData, container) {
     const eventDiv = document.createElement('div');
     eventDiv.className = 'event';
-    eventDiv.style.backgroundImage = `url(${imageUrl})`;
+    
+    if (eventData.imageUrl) {
+      eventDiv.style.backgroundImage = `url(${eventData.imageUrl})`;
+    } else {
+      eventDiv.style.backgroundColor = '#2E3092';
+    }
 
     const overlay = document.createElement('div');
     overlay.className = 'event-overlay';
     
-    // Process the title for display with better word breaking control
-    let processedTitle = title
+    let processedTitle = eventData.title
       .replace(/L👀k:/g, '<span class="no-break-look">L<img src="https://raw.githubusercontent.com/CU4thSpace/EVENTS/refs/heads/main/emoji-eyes.png" alt="👀" class="emoji-eye">k:</span>\n')
       .replace(/L👀K:/g, '<span class="no-break-look">L<img src="https://raw.githubusercontent.com/CU4thSpace/EVENTS/refs/heads/main/emoji-eyes.png" alt="👀" class="emoji-eye">K:</span>\n')
       .replace(/L👀k/g, '<span class="no-break-look">L<img src="https://raw.githubusercontent.com/CU4thSpace/EVENTS/refs/heads/main/emoji-eyes.png" alt="👀" class="emoji-eye">k</span>')
       .replace(/L👀K/g, '<span class="no-break-look">L<img src="https://raw.githubusercontent.com/CU4thSpace/EVENTS/refs/heads/main/emoji-eyes.png" alt="👀" class="emoji-eye">K</span>');
 
-    // Smart line breaking: add line breaks at strategic points for better word preservation
     processedTitle = smartLineBreaking(processedTitle);
 
-    const textForSizing = title.replace(/👀/g, '');
+    const textForSizing = eventData.title.replace(/👀/g, '');
     const maxLength = 25;
     const baseFontSize = 12.3;
 
@@ -190,18 +300,17 @@
     if (textForSizing.length > maxLength) {
       const scale = Math.max(0.7, maxLength / textForSizing.length);
       titleDiv.style.fontSize = `${(baseFontSize * scale).toFixed(1)}rem`;
-      console.log(`Title length: ${textForSizing.length}, Scale: ${scale}, New font size: ${(baseFontSize * scale).toFixed(1)}rem`);
     }
 
     overlay.appendChild(titleDiv);
 
     const descDiv = document.createElement('div');
     descDiv.className = 'event-description';
-    descDiv.textContent = descHeading;
+    descDiv.textContent = eventData.descHeading;
 
     const timeDiv = document.createElement('div');
     timeDiv.className = 'event-time';
-    timeDiv.textContent = descTime;
+    timeDiv.textContent = eventData.descTime;
 
     overlay.appendChild(descDiv);
     overlay.appendChild(timeDiv);
@@ -209,32 +318,21 @@
     container.appendChild(eventDiv);
 
     const imgLoader = new Image();
-    const imgPromise = new Promise(resolve => {
-      imgLoader.onload = resolve;
-      imgLoader.onerror = resolve;
-      imgLoader.src = imageUrl;
-    });
-
-    await imgPromise;
-    document.getElementById('loadingSpinner').style.display = 'none';
+    imgLoader.src = eventData.imageUrl;
   }
 
   function smartLineBreaking(text) {
-    // Strategy: Insert line breaks at logical points to prevent awkward word breaking
-    // This is a simple version - you can expand this based on your specific needs
-    
-    // Replace multiple spaces with single spaces first
     text = text.replace(/\s+/g, ' ');
-    
-    // Add strategic line breaks after colons and certain words
     text = text.replace(/:\s+/g, ':\n');
     text = text.replace(/\s+(with|and|for|at|in|on)\s+/gi, '\n$1 ');
-    
     return text;
   }
 
   fetchAndDisplayEvents();
-  setInterval(fetchAndDisplayEvents, 5 * 60 * 1000); 
+  // Check every 5 minutes for event updates
+  setInterval(fetchAndDisplayEvents, 5 * 60 * 1000);
+  // Also check every minute to see if we should switch to a new event
+  setInterval(fetchAndDisplayEvents, 60 * 1000);
 </script>
   
 </body>
