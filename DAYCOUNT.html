@@ -314,7 +314,7 @@
       if (minutes > 0 || hours > 0 || days > 0) parts.push(`${minutes}m`);
       parts.push(`${seconds}s`);
 
-      return `<span class="countdown-label">STARTS IN</span>${parts.join(' ')}`;
+      return `<span class="countdown-label">STARTING IN...</span>${parts.join(' ')}`;
     }
 
     function updateCountdowns() {
