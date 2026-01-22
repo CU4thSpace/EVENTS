@@ -134,15 +134,16 @@
 
     .event-date {
       position: absolute;
-      bottom: 38%;
+      bottom: 65%;
       left: 5.2%;
       max-width: 52%;
-      font-size: clamp(1rem, 3vw, 3rem);
-      font-weight: normal;
+    font-size: clamp(0.75rem, 2.25vw, 2.25rem);
+      font-weight: 100;
       font-style: italic;
       line-height: 1;
       opacity: 0.9;
       color: #ccc;
+      letter-spacing: 0.02em;
     }
 
     .event-title {
@@ -273,7 +274,36 @@
       allEvents[currentEventIndex].classList.add('visible');
     }
 
-    // 👀 Helper function for safe replacements
+    // Parse event time from description text
+    function parseEventTime(timeString) {
+      try {
+        // Extract date components
+        const dateMatch = timeString.match(/(\w+)\s+(\d{1,2}),\s+(\d{4})/);
+        let eventDate = new Date();
+        
+        if (dateMatch) {
+          const monthName = dateMatch[1];
+          const day = parseInt(dateMatch[2]);
+          const year = parseInt(dateMatch[3]);
+          const monthMap = {
+            'January': 0, 'February': 1, 'March': 2, 'April': 3, 'May': 4, 'June': 5,
+            'July': 6, 'August': 7, 'September': 8, 'October': 9, 'November': 10, 'December': 11
+          };
+          const month = monthMap[monthName];
+          eventDate = new Date(year, month, day);
+          
+          console.log('Parsed date from:', timeString, '→', eventDate);
+          return eventDate;
+        }
+        
+        return null;
+      } catch (e) {
+        console.error('Error parsing time:', e);
+        return null;
+      }
+    }
+
+    // Helper function for safe replacements
     function processTitleWithEyes(title) {
       let processedTitle = title
         .replace(/L👀k:/g, '<span class="no-break-look">L<img src="https://raw.githubusercontent.com/CU4thSpace/EVENTS/main/emoji-eyes.png" alt="👀" class="emoji-eye">k:</span>')
@@ -281,7 +311,6 @@
         .replace(/L👀k/g,  '<span class="no-break-look">L<img src="https://raw.githubusercontent.com/CU4thSpace/EVENTS/main/emoji-eyes.png" alt="👀" class="emoji-eye">k</span>')
         .replace(/L👀K/g,  '<span class="no-break-look">L<img src="https://raw.githubusercontent.com/CU4thSpace/EVENTS/main/emoji-eyes.png" alt="👀" class="emoji-eye">K</span>');
 
-      // Optional: handle line breaks safely without touching <img src="...">
       processedTitle = processedTitle.replace(/:\s+/g, ':<br>');
 
       return processedTitle;
@@ -310,6 +339,20 @@
         const img = tempDiv.querySelector('img');
         const imageUrl = img ? img.src : 'https://via.placeholder.com/300';
 
+        // Parse event date from description text (like the first page does)
+        const descTime = tempDiv.querySelector('p')?.textContent.trim() || '';
+        let eventDate = parseEventTime(descTime);
+        
+        // Fallback to RSS pubDate if parsing fails
+        if (!eventDate) {
+          const pubDate = item.querySelector('pubDate')?.textContent;
+          if (pubDate) {
+            eventDate = new Date(pubDate);
+          } else {
+            eventDate = new Date();
+          }
+        }
+
         const eventDiv = document.createElement('div');
         eventDiv.className = 'event';
         eventDiv.style.backgroundImage = `url(${imageUrl})`;
@@ -317,19 +360,17 @@
         const overlay = document.createElement('div');
         overlay.className = 'event-overlay';
 
-        // Add date
+        // Add date from parsed event
         const dateDiv = document.createElement('div');
         dateDiv.className = 'event-date';
-        const now = new Date();
         const options = { weekday: 'long', month: 'long', day: 'numeric' };
-        dateDiv.textContent = now.toLocaleDateString('en-US', options);
+        dateDiv.textContent = eventDate.toLocaleDateString('en-US', options);
         overlay.appendChild(dateDiv);
 
         const maxLength = 25;
         const titleDiv = document.createElement('div');
         titleDiv.className = 'event-title';
 
-        // ✅ Use helper for replacements
         let processedTitle = processTitleWithEyes(title);
         titleDiv.innerHTML = processedTitle;
 
@@ -381,7 +422,7 @@
     }
 
     setInterval(updateClock, 1000);
-    updateClock(); // Initial call to display time immediately
+    updateClock();
   </script>
 
 </body>
