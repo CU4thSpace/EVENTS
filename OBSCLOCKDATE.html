@@ -130,14 +130,17 @@
       left: 0;
       z-index: 1;
       transform-origin: 5.2% 44.4%;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding-left: 5.2%;
+      padding-bottom: 9.3%;
+      box-sizing: border-box;
+      gap: clamp(0.5rem, 2vw, 2rem);
     }
 
     .event-date {
-      position: fixed;
-      top: 5%;
-      left: 50%;
-      transform: translateX(-50%);
-      max-width: 90%;
+      max-width: 52%;
       font-size: clamp(0.75rem, 2.25vw, 2.25rem);
       font-weight: 100;
       font-style: italic;
@@ -145,14 +148,9 @@
       opacity: 0.9;
       color: #ccc;
       letter-spacing: 0.02em;
-      z-index: 9999;
-      text-align: center;
     }
 
     .event-title {
-      position: absolute;
-      bottom: 44.4%;
-      left: 5.2%;
       max-width: 52%;
       font-size: clamp(2rem, 7.5vw, 7.5rem);
       font-weight: bold;
@@ -164,9 +162,6 @@
     }
 
     .event-description {
-      position: absolute;
-      bottom: 23.1%;
-      left: 5.2%;
       max-width: 72.9%;
       font-size: clamp(1rem, 3.2vw, 3.2rem);
       line-height: 1;
@@ -175,9 +170,6 @@
     }
 
     .event-time {
-      position: absolute;
-      bottom: 9.3%;
-      left: 5.2%;
       font-size: clamp(0.8rem, 2.8vw, 2.8rem);
       color: #ccc;
       opacity: 0.9;
@@ -214,7 +206,7 @@
     
     #clock {
       position: fixed;
-      top: 15%;
+      top: 10%;
       left: 50%;
       transform: translate(-50%, -50%);
       font-size: 6rem;
