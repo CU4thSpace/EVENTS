@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Countdown Timer</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    font-family: "gill-sans-nova-condensed", "Gill Sans", "Gill Sans MT", Calibri, sans-serif;
+    background: #111;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    color: #ccc;
+  }
+
+  /* ── Big clock ── */
+  #clock {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 22vw;
+    color: #ccc;
+    font-family: "gill-sans-nova-condensed", "Gill Sans", "Gill Sans MT", Calibri, sans-serif;
+    font-weight: lighter;
+    letter-spacing: 0.02em;
+    line-height: 1;
+    z-index: 10;
+    transition: color 0.4s;
+    pointer-events: none;
+    white-space: nowrap;
+  }
+
+  #clock.urgent {
+    animation: urgentPulse 1s ease-in-out infinite;
+  }
+
+  @keyframes urgentPulse {
+    0%, 100% { opacity: 1; color: #fff; }
+    50% { opacity: 0.35; color: #ccc; }
+  }
+
+  /* ── Input row — top ── */
+  #input-row {
+    position: fixed;
+    top: 7%;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: baseline;
+    gap: 1.2vw;
+    z-index: 9999;
+  }
+
+  #input-row label {
+    font-size: clamp(0.75rem, 1.4vw, 1.6rem);
+    font-weight: 100;
+    font-style: italic;
+    color: #ccc;
+    opacity: 0.6;
+    letter-spacing: 0.06em;
+  }
+
+  #minutesInput {
+    width: 3em;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid rgba(204,204,204,0.35);
+    color: #ccc;
+    font-family: inherit;
+    font-size: clamp(1rem, 2.2vw, 2.4rem);
+    font-weight: lighter;
+    text-align: center;
+    outline: none;
+    padding: 0.05em 0.1em;
+    -moz-appearance: textfield;
+    transition: border-color 0.2s;
+  }
+  #minutesInput::-webkit-outer-spin-button,
+  #minutesInput::-webkit-inner-spin-button { -webkit-appearance: none; }
+  #minutesInput:focus { border-bottom-color: #ccc; }
+
+  .set-btn {
+    background: none;
+    border: none;
+    color: #ccc;
+    font-family: inherit;
+    font-size: clamp(0.75rem, 1.2vw, 1.3rem);
+    font-weight: 100;
+    font-style: italic;
+    letter-spacing: 0.1em;
+    cursor: pointer;
+    opacity: 0.5;
+    padding: 0.2em 0.4em;
+    transition: opacity 0.2s;
+  }
+  .set-btn:hover { opacity: 1; }
+
+  /* ── Controls — bottom ── */
+  #controls {
+    position: fixed;
+    bottom: 8%;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 4vw;
+    z-index: 9999;
+  }
+
+  .btn {
+    background: none;
+    border: none;
+    color: #ccc;
+    font-family: inherit;
+    font-size: clamp(0.85rem, 1.8vw, 2rem);
+    font-weight: 100;
+    font-style: italic;
+    letter-spacing: 0.1em;
+    cursor: pointer;
+    opacity: 0.45;
+    padding: 0.3em 0.6em;
+    border-bottom: 1px solid transparent;
+    transition: opacity 0.2s, border-color 0.2s;
+  }
+  .btn:hover { opacity: 0.9; border-bottom-color: rgba(204,204,204,0.4); }
+  .btn.active { opacity: 1; border-bottom-color: #ccc; }
+
+  /* ── Subtle progress arc ── */
+  #arc-svg {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: min(85vw, 85vh);
+    height: min(85vw, 85vh);
+    z-index: 5;
+    pointer-events: none;
+  }
+
+  #progressCircle {
+    transform-origin: center;
+    transform: rotate(-90deg);
+  }
+
+  /* ── Done flash ── */
+  #doneFlash {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0;
+    background: radial-gradient(ellipse at center, rgba(255,255,255,0.07) 0%, transparent 70%);
+  }
+  #doneFlash.show { animation: flashIn 0.5s ease-out 3; }
+  @keyframes flashIn { 0%{opacity:0} 50%{opacity:1} 100%{opacity:0} }
+
+  /* ── Status dot ── */
+  #statusDot {
+    position: fixed;
+    bottom: 4.5%;
+    right: 3%;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: rgba(204,204,204,0.15);
+    transition: background 0.3s;
+    z-index: 9999;
+  }
+  #statusDot.running {
+    background: #ccc;
+    animation: blink 1.2s ease-in-out infinite;
+  }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.15} }
+</style>
+</head>
+<body>
+
+<div id="doneFlash"></div>
+
+<!-- Input -->
+<div id="input-row">
+  <label for="minutesInput">minutes</label>
+  <input type="number" id="minutesInput" value="5" min="0" max="99">
+  <button class="set-btn" onclick="setTimer()">set</button>
+</div>
+
+<!-- Big clock -->
+<div id="clock">05:00</div>
+
+<!-- Progress arc -->
+<svg id="arc-svg" viewBox="0 0 400 400">
+  <circle
+    id="progressCircle"
+    cx="200" cy="200" r="190"
+    fill="none"
+    stroke="rgba(204,204,204,0.12)"
+    stroke-width="1"
+    stroke-linecap="round"
+  />
+</svg>
+
+<!-- Controls -->
+<div id="controls">
+  <button class="btn" id="btnStart" onclick="startTimer()">start</button>
+  <button class="btn" id="btnStop"  onclick="stopTimer()">stop</button>
+  <button class="btn" id="btnReset" onclick="resetTimer()">reset</button>
+</div>
+
+<div id="statusDot"></div>
+
+<script>
+  const CIRCUMFERENCE = 2 * Math.PI * 190;
+
+  let totalSeconds    = 5 * 60;
+  let remainingSeconds= totalSeconds;
+  let interval        = null;
+  let running         = false;
+
+  const clockEl        = document.getElementById('clock');
+  const progressCircle = document.getElementById('progressCircle');
+  const statusDot      = document.getElementById('statusDot');
+  const minutesInput   = document.getElementById('minutesInput');
+  const doneFlash      = document.getElementById('doneFlash');
+  const btnStart       = document.getElementById('btnStart');
+
+  progressCircle.style.strokeDasharray  = CIRCUMFERENCE;
+  progressCircle.style.strokeDashoffset = 0;
+
+  function formatTime(s) {
+    const m   = Math.floor(s / 60);
+    const sec = s % 60;
+    return String(m).padStart(2, '0') + ':' + String(sec).padStart(2, '0');
+  }
+
+  function updateDisplay() {
+    clockEl.textContent = formatTime(remainingSeconds);
+    const progress = totalSeconds > 0 ? remainingSeconds / totalSeconds : 1;
+    progressCircle.style.strokeDashoffset = CIRCUMFERENCE * (1 - progress);
+
+    const isUrgent = remainingSeconds <= 10 && (running || remainingSeconds === 0);
+    clockEl.classList.toggle('urgent', isUrgent);
+    progressCircle.setAttribute('stroke',
+      isUrgent ? 'rgba(255,255,255,0.4)' : 'rgba(204,204,204,0.12)'
+    );
+  }
+
+  function setTimer() {
+    stopTimer();
+    const mins = parseInt(minutesInput.value) || 0;
+    totalSeconds = mins * 60;
+    remainingSeconds = totalSeconds;
+    clockEl.classList.remove('urgent');
+    progressCircle.setAttribute('stroke', 'rgba(204,204,204,0.12)');
+    progressCircle.style.transition = 'none';
+    updateDisplay();
+  }
+
+  function startTimer() {
+    if (running || remainingSeconds <= 0) return;
+    running = true;
+    btnStart.classList.add('active');
+    progressCircle.style.transition = 'stroke-dashoffset 1s linear';
+    statusDot.classList.add('running');
+
+    interval = setInterval(() => {
+      remainingSeconds--;
+      updateDisplay();
+      if (remainingSeconds <= 0) {
+        clearInterval(interval);
+        running = false;
+        btnStart.classList.remove('active');
+        statusDot.classList.remove('running');
+        clockEl.classList.add('urgent');
+        doneFlash.classList.add('show');
+        setTimeout(() => doneFlash.classList.remove('show'), 1600);
+      }
+    }, 1000);
+  }
+
+  function stopTimer() {
+    if (!running) return;
+    running = false;
+    clearInterval(interval);
+    btnStart.classList.remove('active');
+    progressCircle.style.transition = 'none';
+    statusDot.classList.remove('running');
+  }
+
+  function resetTimer() {
+    stopTimer();
+    remainingSeconds = totalSeconds;
+    clockEl.classList.remove('urgent');
+    progressCircle.setAttribute('stroke', 'rgba(204,204,204,0.12)');
+    progressCircle.style.transition = 'none';
+    updateDisplay();
+  }
+
+  minutesInput.addEventListener('keydown', e => { if (e.key === 'Enter') setTimer(); });
+
+  updateDisplay();
+</script>
+</body>
+</html>
