@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1600">
+<title>Dollar Display</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Teko:wght@700&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    width: 3210px;
+    height: 1080px;
+    overflow: hidden;
+    background: #111;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .top-bar {
+    height: 540px;
+    background: #111;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Teko', sans-serif;
+    color: #333;
+    font-size: 80px;
+    letter-spacing: 0.2em;
+  }
+
+  .panels {
+    height: 540px;
+    background: #e03030;
+    display: flex;
+    flex-direction: row;
+    gap: 24px;
+    padding: 24px;
+  }
+
+  .panel {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 10px solid #2bbfac;
+    position: relative;
+    cursor: pointer;
+  }
+
+  .panel:nth-child(1) { background: #7b78c8; }
+  .panel:nth-child(2) { background: #e88070; }
+  .panel:nth-child(3) { background: #6ecfbe; }
+
+  .dollar-input {
+    font-family: 'Teko', sans-serif;
+    font-size: 220px;
+    color: white;
+    background: transparent;
+    border: none;
+    outline: none;
+    text-align: center;
+    width: 100%;
+    text-shadow: 4px 6px 0px rgba(0,0,0,0.35);
+    cursor: text;
+    caret-color: white;
+    letter-spacing: -4px;
+  }
+
+  .dollar-input::placeholder {
+    color: rgba(255,255,255,0.4);
+  }
+
+  .save-btn {
+    position: fixed;
+    bottom: 20px;
+    right: 30px;
+    background: #2bbfac;
+    color: white;
+    border: none;
+    font-family: 'Teko', sans-serif;
+    font-size: 28px;
+    padding: 14px 36px;
+    cursor: pointer;
+    letter-spacing: 0.1em;
+    border-radius: 4px;
+    z-index: 100;
+    transition: background 0.2s;
+  }
+
+  .save-btn:hover { background: #1fa090; }
+
+  .saved-msg {
+    position: fixed;
+    bottom: 20px;
+    right: 200px;
+    font-family: 'Teko', sans-serif;
+    font-size: 24px;
+    color: #2bbfac;
+    opacity: 0;
+    transition: opacity 0.4s;
+    z-index: 100;
+  }
+
+  .saved-msg.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<div class="top-bar">THE PRICE is WRONG</div>
+
+<div class="panels">
+  <div class="panel" onclick="this.querySelector('input').focus()">
+    <input class="dollar-input" id="val1" type="text" placeholder="$0" maxlength="10" />
+  </div>
+  <div class="panel" onclick="this.querySelector('input').focus()">
+    <input class="dollar-input" id="val2" type="text" placeholder="$0" maxlength="10" />
+  </div>
+  <div class="panel" onclick="this.querySelector('input').focus()">
+    <input class="dollar-input" id="val3" type="text" placeholder="$0" maxlength="10" />
+  </div>
+</div>
+
+<button class="save-btn" onclick="saveValues()">SAVE</button>
+<div class="saved-msg" id="savedMsg">✓ SAVED</div>
+
+<script>
+  // Load saved values on start
+  const ids = ['val1', 'val2', 'val3'];
+  ids.forEach(id => {
+    const saved = localStorage.getItem(id);
+    if (saved) document.getElementById(id).value = saved;
+  });
+
+  // Auto-format dollar sign on input
+  ids.forEach(id => {
+    const input = document.getElementById(id);
+    input.addEventListener('input', () => {
+      let v = input.value.replace(/[^0-9]/g, '');
+      if (v) input.value = '$' + parseInt(v, 10).toLocaleString();
+      else input.value = '';
+    });
+    // Save on Enter
+    input.addEventListener('keydown', e => {
+      if (e.key === 'Enter') saveValues();
+    });
+  });
+
+  function saveValues() {
+    ids.forEach(id => {
+      localStorage.setItem(id, document.getElementById(id).value);
+    });
+    const msg = document.getElementById('savedMsg');
+    msg.classList.add('show');
+    setTimeout(() => msg.classList.remove('show'), 2000);
+  }
+</script>
+</body>
+</html>
