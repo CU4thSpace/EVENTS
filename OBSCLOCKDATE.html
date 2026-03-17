@@ -269,6 +269,18 @@
       allEvents[currentEventIndex].classList.add('visible');
     }
 
+    // Logitech presenter remote + keyboard navigation
+    // Covers: ArrowRight/Left (presentation mode) and PageDown/Up (some remotes/OS combos)
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'ArrowRight' || e.key === 'PageDown') {
+        e.preventDefault();
+        nextEvent();
+      } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+        e.preventDefault();
+        previousEvent();
+      }
+    });
+
     // Parse event time from description text
     function parseEventTime(timeString) {
       try {
