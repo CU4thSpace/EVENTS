@@ -43,6 +43,11 @@
       background: rgba(255,255,255,0.4);
     }
 
+    .zoom-button:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
     .event-container {
       position: relative;
       width: 100vw;
@@ -203,9 +208,9 @@
       word-break: keep-all;
       overflow-wrap: normal;
     }
-    
+
     #clock {
-      position: fixed;
+      position: absolute;
       top: 10%;
       left: 50%;
       transform: translate(-50%, -50%);
@@ -216,13 +221,12 @@
       font-family: "gill-sans-nova-condensed", sans-serif;
       font-weight: lighter;
     }
-        
   </style>
 </head>
 <body>
 
   <div id="loadingSpinner">Loading events…</div>
-  
+
   <div class="event-container" id="eventContainer">
     <div class="border-overlay"></div>
     <div id="clock"></div>
@@ -230,11 +234,14 @@
   </div>
 
   <div id="zoom-controls">
-    <button class="zoom-button" onclick="location.reload()">←</button>
-    <button class="zoom-button" onclick="nextEvent()">→</button>
-    <button class="zoom-button" onclick="changeZoom(-0.1)">−</button>
-    <button class="zoom-button" onclick="changeZoom(0.1)">+</button>
+    <button class="zoom-button" onclick="location.reload()" title="Reload">←</button>
+    <button class="zoom-button" onclick="nextEvent()" title="Next event">→</button>
+    <button class="zoom-button" onclick="changeZoom(-0.1)" title="Zoom out">−</button>
+    <button class="zoom-button" onclick="changeZoom(0.1)" title="Zoom in">+</button>
+    <button class="zoom-button" id="saveBtn" onclick="saveAsPng()" title="Save as PNG"><span style="font-size: 1.5rem;">⬇</span></button>
   </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
   <script>
     let zoomLevel = 1;
@@ -251,26 +258,21 @@
 
     function nextEvent() {
       if (allEvents.length === 0) return;
-      
       const current = document.querySelector('.event.visible');
       if (current) current.classList.remove('visible');
-      
       currentEventIndex = (currentEventIndex + 1) % allEvents.length;
       allEvents[currentEventIndex].classList.add('visible');
     }
 
     function previousEvent() {
       if (allEvents.length === 0) return;
-      
       const current = document.querySelector('.event.visible');
       if (current) current.classList.remove('visible');
-      
       currentEventIndex = (currentEventIndex - 1 + allEvents.length) % allEvents.length;
       allEvents[currentEventIndex].classList.add('visible');
     }
 
     // Logitech presenter remote + keyboard navigation
-    // Covers: ArrowRight/Left (presentation mode) and PageDown/Up (some remotes/OS combos)
     document.addEventListener('keydown', function(e) {
       if (e.key === 'ArrowRight' || e.key === 'PageDown') {
         e.preventDefault();
@@ -281,13 +283,10 @@
       }
     });
 
-    // Parse event time from description text
     function parseEventTime(timeString) {
       try {
-        // Extract date components
         const dateMatch = timeString.match(/(\w+)\s+(\d{1,2}),\s+(\d{4})/);
         let eventDate = new Date();
-        
         if (dateMatch) {
           const monthName = dateMatch[1];
           const day = parseInt(dateMatch[2]);
@@ -298,11 +297,9 @@
           };
           const month = monthMap[monthName];
           eventDate = new Date(year, month, day);
-          
           console.log('Parsed date from:', timeString, '→', eventDate);
           return eventDate;
         }
-        
         return null;
       } catch (e) {
         console.error('Error parsing time:', e);
@@ -310,16 +307,13 @@
       }
     }
 
-    // Helper function for safe replacements
     function processTitleWithEyes(title) {
       let processedTitle = title
         .replace(/L👀k:/g, '<span class="no-break-look">L<img src="https://raw.githubusercontent.com/CU4thSpace/EVENTS/main/emoji-eyes.png" alt="👀" class="emoji-eye">k:</span>')
         .replace(/L👀K:/g, '<span class="no-break-look">L<img src="https://raw.githubusercontent.com/CU4thSpace/EVENTS/main/emoji-eyes.png" alt="👀" class="emoji-eye">K:</span>')
         .replace(/L👀k/g,  '<span class="no-break-look">L<img src="https://raw.githubusercontent.com/CU4thSpace/EVENTS/main/emoji-eyes.png" alt="👀" class="emoji-eye">k</span>')
         .replace(/L👀K/g,  '<span class="no-break-look">L<img src="https://raw.githubusercontent.com/CU4thSpace/EVENTS/main/emoji-eyes.png" alt="👀" class="emoji-eye">K</span>');
-
       processedTitle = processedTitle.replace(/:\s+/g, ':<br>');
-
       return processedTitle;
     }
 
@@ -346,11 +340,9 @@
         const img = tempDiv.querySelector('img');
         const imageUrl = img ? img.src : 'https://via.placeholder.com/300';
 
-        // Parse event date from description text (like the first page does)
         const descTime = tempDiv.querySelector('p')?.textContent.trim() || '';
         let eventDate = parseEventTime(descTime);
-        
-        // Fallback to RSS pubDate if parsing fails
+
         if (!eventDate) {
           const pubDate = item.querySelector('pubDate')?.textContent;
           if (pubDate) {
@@ -367,7 +359,6 @@
         const overlay = document.createElement('div');
         overlay.className = 'event-overlay';
 
-        // Add date from parsed event
         const dateDiv = document.createElement('div');
         dateDiv.className = 'event-date';
         const options = { weekday: 'long', month: 'long', day: 'numeric' };
@@ -377,10 +368,7 @@
         const maxLength = 25;
         const titleDiv = document.createElement('div');
         titleDiv.className = 'event-title';
-
-        let processedTitle = processTitleWithEyes(title);
-        titleDiv.innerHTML = processedTitle;
-
+        titleDiv.innerHTML = processTitleWithEyes(title);
         if (title.length > maxLength) {
           const scale = Math.max(0.7, maxLength / title.length);
           titleDiv.style.fontSize = `clamp(${2 * scale}rem, ${7.5 * scale}vw, ${7.5 * scale}rem)`;
@@ -405,7 +393,6 @@
 
       allEvents = eventDivs;
       currentEventIndex = 0;
-
       if (eventDivs.length > 0) {
         eventDivs[0].classList.add('visible');
       }
@@ -416,13 +403,63 @@
       });
     }
 
+    async function saveAsPng() {
+      const saveBtn = document.getElementById('saveBtn');
+      const controls = document.getElementById('zoom-controls');
+      const clock = document.getElementById('clock');
+
+      // Disable button and show feedback while rendering
+      saveBtn.disabled = true;
+      saveBtn.textContent = '…';
+
+      // Hide UI chrome that shouldn't appear in the export
+      controls.style.display = 'none';
+      clock.style.display = 'none';
+
+      try {
+        const container = document.getElementById('eventContainer');
+
+        const canvas = await html2canvas(container, {
+          useCORS: true,
+          allowTaint: false,
+          scale: 2,               // 2× resolution for crisp 1080p output
+          backgroundColor: '#111',
+          logging: false,
+          imageTimeout: 10000,
+        });
+
+        // Build a clean filename from the current event title
+        const visibleEvent = allEvents[currentEventIndex];
+        const titleText = visibleEvent?.querySelector('.event-title')?.innerText || 'event';
+        const safeName = titleText
+          .replace(/[^a-z0-9]/gi, '_')
+          .replace(/_+/g, '_')
+          .toLowerCase()
+          .slice(0, 50);
+
+        const link = document.createElement('a');
+        link.download = `4thspace_${safeName}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+      } catch (err) {
+        console.error('PNG export failed:', err);
+        alert('Export failed — see console for details.');
+      } finally {
+        // Restore UI
+        controls.style.display = '';
+        clock.style.display = '';
+        saveBtn.disabled = false;
+        saveBtn.textContent = '⬇';
+      }
+    }
+
     fetchAndDisplayEvents();
-    setInterval(fetchAndDisplayEvents, 6*60*60*1000);
-    
-    // Clock 
+    setInterval(fetchAndDisplayEvents, 6 * 60 * 60 * 1000);
+
+    // Clock
     function updateClock() {
       const now = new Date();
-      const hours = String(now.getHours()).padStart(2, '0');
+      const hours   = String(now.getHours()).padStart(2, '0');
       const minutes = String(now.getMinutes()).padStart(2, '0');
       const seconds = String(now.getSeconds()).padStart(2, '0');
       document.getElementById('clock').textContent = `${hours}:${minutes}:${seconds}`;
