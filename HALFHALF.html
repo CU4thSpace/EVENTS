@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=1920" />
+  <link rel="stylesheet" href="https://use.typekit.net/paf7uxj.css">
+  <title>Concordia 4th Space — Events</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --white:   #f0ede8;
+      --dim:     #7a7068;
+      --accent:  #e8341c;
+      --bg:      #0d0d0d;
+      --border:  rgba(255,255,255,0.09);
+      --gap:     8px;
+    }
+
+    html, body {
+      width: 1920px;
+      height: 1080px;
+      overflow: hidden;
+      background: var(--bg);
+      font-family: "gill-sans-nova-condensed", "Gill Sans", sans-serif;
+      color: var(--white);
+    }
+
+    /* ── SHELL ─────────────────────────────────────────────────── */
+    .shell {
+      display: grid;
+      grid-template-columns: 174px 1fr 1fr;
+      width: 1920px;
+      height: 1080px;
+    }
+
+    /* ── SIDEBAR ───────────────────────────────────────────────── */
+    .sidebar {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 36px 18px 28px 24px;
+      border-right: 1px solid var(--border);
+    }
+
+    .logo-cu {
+      font-size: 0.62rem;
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+      color: var(--dim);
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+    .logo-4th {
+      font-size: 6.4rem;
+      font-weight: 700;
+      line-height: 0.78;
+      letter-spacing: -0.02em;
+      color: var(--white);
+    }
+    .logo-space {
+      font-size: 1.3rem;
+      letter-spacing: 0.32em;
+      text-transform: uppercase;
+      color: var(--dim);
+      margin-top: 8px;
+      display: block;
+    }
+    .logo-rule {
+      width: 28px;
+      height: 2px;
+      background: var(--accent);
+      margin: 22px 0 18px;
+    }
+    .logo-tagline {
+      font-size: 0.68rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--dim);
+      line-height: 1.7;
+    }
+
+    .sidebar-foot {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .foot-label {
+      font-size: 0.58rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.16);
+    }
+    #timestamp {
+      font-size: 0.7rem;
+      letter-spacing: 0.1em;
+      color: rgba(255,255,255,0.22);
+    }
+
+    /* ── PANELS ────────────────────────────────────────────────── */
+    .panel {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .panel.upcoming { border-right: 1px solid var(--border); }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 18px 12px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .panel-label {
+      font-size: 0.65rem;
+      letter-spacing: 0.32em;
+      text-transform: uppercase;
+      color: var(--dim);
+    }
+    .panel-label em { color: var(--accent); font-style: normal; }
+    .panel-label.yt em { color: #ff4444; }
+    .panel-source {
+      margin-left: auto;
+      font-size: 0.55rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.14);
+    }
+
+    /* ── GRID ──────────────────────────────────────────────────── */
+    .event-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(2, 1fr);
+      gap: var(--gap);
+      padding: var(--gap);
+      flex: 1;
+      min-height: 0;
+    }
+
+    /* ── CARD ──────────────────────────────────────────────────── */
+    .card {
+      position: relative;
+      overflow: hidden;
+      background: #181818;
+      border: 1px solid var(--border);
+      transition: border-color 0.35s;
+    }
+    .card:hover { border-color: rgba(255,255,255,0.28); }
+
+    .card-bg {
+      position: absolute;
+      inset: 0;
+      background-size: cover;
+      background-position: center;
+      transition: transform 0.55s ease;
+    }
+    .card:hover .card-bg { transform: scale(1.04); }
+
+    .card-scrim {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        to top,
+        rgba(0,0,0,0.94) 0%,
+        rgba(0,0,0,0.55) 40%,
+        rgba(0,0,0,0.12) 100%
+      );
+    }
+
+    .card-body {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 14px 15px 16px;
+    }
+
+    .card-num {
+      position: absolute;
+      top: 10px;
+      right: 12px;
+      font-size: 0.55rem;
+      letter-spacing: 0.18em;
+      color: rgba(255,255,255,0.22);
+    }
+
+    /* YouTube badge */
+    .yt-badge {
+      position: absolute;
+      top: 10px;
+      left: 12px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      background: rgba(0,0,0,0.6);
+      border: 1px solid rgba(255,68,68,0.4);
+      padding: 3px 7px 3px 5px;
+    }
+    .yt-badge svg {
+      width: 13px; height: 13px;
+      fill: #ff4444;
+      flex-shrink: 0;
+    }
+    .yt-badge span {
+      font-size: 0.5rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.45);
+    }
+
+    .card-title {
+      font-size: 1.18rem;
+      font-weight: 700;
+      line-height: 1.0;
+      color: var(--white);
+      margin-bottom: 5px;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .card-date {
+      font-size: 0.64rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+    .panel.past .card-date { color: #ff6b6b; }
+
+    /* desaturate YouTube panel */
+    .panel.past .card-bg {
+      filter: saturate(0.5) brightness(0.82);
+    }
+    .panel.past .card {
+      border-color: rgba(255,255,255,0.06);
+    }
+
+    /* ── SKELETON ──────────────────────────────────────────────── */
+    @keyframes shimmer {
+      0%   { background-position: -600px 0; }
+      100% { background-position:  600px 0; }
+    }
+    .skeleton {
+      animation: shimmer 1.8s infinite linear;
+      background: linear-gradient(90deg, #181818 25%, #272727 50%, #181818 75%);
+      background-size: 1200px 100%;
+    }
+
+    /* ── STATE MSG ─────────────────────────────────────────────── */
+    .state-msg {
+      grid-column: 1 / -1;
+      grid-row: 1 / -1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.72rem;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--dim);
+    }
+
+    .emoji-eye {
+      display: inline-block;
+      height: 0.88em;
+      width: auto;
+      vertical-align: middle;
+    }
+  </style>
+</head>
+<body>
+
+<div class="shell">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div>
+      <div class="logo-cu">Concordia University</div>
+      <div class="logo-4th">4TH</div>
+      <span class="logo-space">Space</span>
+      <div class="logo-rule"></div>
+      <div class="logo-tagline">
+        Programming<br>&amp; Events
+      </div>
+    </div>
+    <div class="sidebar-foot">
+      <div class="foot-label">Last updated</div>
+      <div id="timestamp">—</div>
+    </div>
+  </aside>
+
+  <!-- UPCOMING (Concordia RSS) -->
+  <section class="panel upcoming">
+    <div class="panel-header">
+      <div class="panel-label"><em>↑</em>&nbsp; Upcoming Events</div>
+      <div class="panel-source">concordia.ca</div>
+    </div>
+    <div class="event-grid" id="upcomingGrid"></div>
+  </section>
+
+  <!-- RECENT VIDEOS (YouTube RSS) -->
+  <section class="panel past">
+    <div class="panel-header">
+      <div class="panel-label yt"><em>▶</em>&nbsp; Recent on YouTube</div>
+      <div class="panel-source">youtube.com/cu4thspace</div>
+    </div>
+    <div class="event-grid" id="ytGrid"></div>
+  </section>
+
+</div>
+
+<script>
+  // ── Helpers ────────────────────────────────────────────────────
+  function processTitle(raw) {
+    return raw
+      .replace(/L👀[kK]:/g, m =>
+        `L<img src="https://raw.githubusercontent.com/CU4thSpace/EVENTS/refs/heads/main/emoji-eyes.png" alt="👀" class="emoji-eye">${m.slice(-2,-1)}:`)
+      .replace(/L👀[kK]/g, m =>
+        `L<img src="https://raw.githubusercontent.com/CU4thSpace/EVENTS/refs/heads/main/emoji-eyes.png" alt="👀" class="emoji-eye">${m.slice(-1)}`);
+  }
+
+  function fmtDate(d) {
+    try {
+      return new Date(d).toLocaleDateString('en-CA', {
+        weekday: 'short', month: 'short', day: 'numeric', year: 'numeric'
+      });
+    } catch(_) { return String(d); }
+  }
+
+  function skeletons(grid, n) {
+    grid.innerHTML = '';
+    for (let i = 0; i < n; i++) {
+      const c = document.createElement('div');
+      c.className = 'card skeleton';
+      grid.appendChild(c);
+    }
+  }
+
+  function makeCard({ title, imageUrl, dateStr, link, isYT, index }) {
+    const card = document.createElement('div');
+    card.className = 'card';
+    if (link) {
+      card.style.cursor = 'pointer';
+      card.onclick = () => window.open(link, '_blank');
+    }
+
+    const bg = document.createElement('div');
+    bg.className = 'card-bg' + (imageUrl ? '' : ' skeleton');
+    if (imageUrl) bg.style.backgroundImage = `url(${imageUrl})`;
+    card.appendChild(bg);
+
+    const scrim = document.createElement('div');
+    scrim.className = 'card-scrim';
+    card.appendChild(scrim);
+
+    const num = document.createElement('div');
+    num.className = 'card-num';
+    num.textContent = String(index + 1).padStart(2, '0');
+    card.appendChild(num);
+
+    if (isYT) {
+      const badge = document.createElement('div');
+      badge.className = 'yt-badge';
+      badge.innerHTML = `
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.6 12 3.6 12 3.6s-7.5 0-9.4.5A3 3 0 0 0 .5 6.2 31.3 31.3 0 0 0 0 12a31.3 31.3 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1A31.3 31.3 0 0 0 24 12a31.3 31.3 0 0 0-.5-5.8zM9.7 15.5V8.5l6.3 3.5-6.3 3.5z"/>
+        </svg>
+        <span>Video</span>`;
+      card.appendChild(badge);
+    }
+
+    const body = document.createElement('div');
+    body.className = 'card-body';
+
+    const titleEl = document.createElement('div');
+    titleEl.className = 'card-title';
+    titleEl.innerHTML = processTitle(title);
+
+    const dateEl = document.createElement('div');
+    dateEl.className = 'card-date';
+    dateEl.textContent = dateStr;
+
+    body.appendChild(titleEl);
+    body.appendChild(dateEl);
+    card.appendChild(body);
+
+    return card;
+  }
+
+  // ── Concordia upcoming ─────────────────────────────────────────
+  async function loadUpcoming(grid) {
+    skeletons(grid, 6);
+    try {
+      const res = await fetch(
+        'https://www.concordia.ca/content/concordia/en/next-gen/4th-space/programming/RSSCAL/_jcr_content/content-main/grid_container_671899525/grid-container-parsys/events_list.xml',
+        { cache: 'no-store' }
+      );
+      const xml = new DOMParser().parseFromString(await res.text(), 'application/xml');
+      const all = Array.from(xml.querySelectorAll('item'));
+      const now = new Date();
+
+      function eventDate(item) {
+        const tmp = document.createElement('div');
+        tmp.innerHTML = item.querySelector('description')?.textContent || '';
+        const p = tmp.querySelector('p')?.textContent.trim() || '';
+        const d = new Date(p);
+        return isNaN(d) ? new Date(item.querySelector('pubDate')?.textContent || 0) : d;
+      }
+
+      const upcoming = all
+        .map(i => ({ item: i, date: eventDate(i) }))
+        .filter(({ date }) => date >= now)
+        .sort((a, b) => a.date - b.date)
+        .slice(0, 6);
+
+      grid.innerHTML = '';
+
+      if (!upcoming.length) {
+        grid.innerHTML = '<div class="state-msg">No upcoming events</div>';
+        return;
+      }
+
+      upcoming.forEach(({ item, date }, i) => {
+        const title   = item.querySelector('title')?.textContent || 'Untitled';
+        const descRaw = item.querySelector('description')?.textContent || '';
+        const tmp = document.createElement('div');
+        tmp.innerHTML = descRaw;
+        const imageUrl = tmp.querySelector('img')?.src || '';
+        const link     = item.querySelector('link')?.textContent?.trim() || '';
+
+        grid.appendChild(makeCard({ title, imageUrl, dateStr: fmtDate(date), link, isYT: false, index: i }));
+      });
+
+    } catch(err) {
+      grid.innerHTML = '<div class="state-msg">Could not load events</div>';
+      console.error('Concordia RSS:', err);
+    }
+  }
+
+  // ── YouTube recent videos ──────────────────────────────────────
+  async function loadYouTube(grid) {
+    skeletons(grid, 6);
+    try {
+      const res = await fetch(
+        'https://www.youtube.com/feeds/videos.xml?channel_id=UCEOJMoIqrd5vJDPIWZz7s_Q',
+        { cache: 'no-store' }
+      );
+      const text = await res.text();
+      const xml  = new DOMParser().parseFromString(text, 'application/xml');
+      const entries = Array.from(xml.querySelectorAll('entry')).slice(0, 6);
+
+      grid.innerHTML = '';
+
+      if (!entries.length) {
+        grid.innerHTML = '<div class="state-msg">No videos found</div>';
+        return;
+      }
+
+      // YouTube Atom uses yt: namespace for videoId and media: for thumbnail/title
+      // We fish nodes by local name to avoid namespace lookup issues across browsers
+      function getByLocal(parent, localName) {
+        return Array.from(parent.getElementsByTagName('*'))
+          .find(el => el.localName === localName);
+      }
+
+      entries.forEach((entry, i) => {
+        // Title
+        const title = getByLocal(entry, 'title')?.textContent || 'Untitled';
+
+        // Video ID → reliable maxres thumbnail
+        const videoId = getByLocal(entry, 'videoId')?.textContent || '';
+        let imageUrl = '';
+        if (videoId) {
+          // Try maxresdefault; browsers will show nothing if it 404s (rare) — acceptable
+          imageUrl = `https://i.ytimg.com/vi/${videoId}/maxresdefault.jpg`;
+        } else {
+          // Fall back to media:thumbnail url attribute
+          const thumb = getByLocal(entry, 'thumbnail');
+          imageUrl = thumb?.getAttribute('url') || '';
+        }
+
+        const published = entry.querySelector('published')?.textContent || '';
+        // <link rel="alternate" href="..."> is the video URL
+        const linkEl = Array.from(entry.querySelectorAll('link'))
+          .find(l => l.getAttribute('rel') === 'alternate');
+        const link = linkEl?.getAttribute('href') || '';
+
+        grid.appendChild(makeCard({
+          title,
+          imageUrl,
+          dateStr: fmtDate(published),
+          link,
+          isYT: true,
+          index: i
+        }));
+      });
+
+    } catch(err) {
+      grid.innerHTML = '<div class="state-msg">Could not load videos</div>';
+      console.error('YouTube RSS:', err);
+    }
+  }
+
+  // ── Init ───────────────────────────────────────────────────────
+  function tick() {
+    document.getElementById('timestamp').textContent =
+      new Date().toLocaleTimeString('en-CA', { hour: '2-digit', minute: '2-digit' });
+  }
+
+  async function load() {
+    const upGrid = document.getElementById('upcomingGrid');
+    const ytGrid = document.getElementById('ytGrid');
+    await Promise.all([loadUpcoming(upGrid), loadYouTube(ytGrid)]);
+    tick();
+  }
+
+  load();
+  setInterval(load, 5 * 60 * 1000);
+</script>
+
+</body>
+</html>
