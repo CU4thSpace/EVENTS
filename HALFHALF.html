@@ -29,72 +29,9 @@
     /* ── SHELL ─────────────────────────────────────────────────── */
     .shell {
       display: grid;
-      grid-template-columns: 174px 1fr 1fr;
+      grid-template-columns: 1fr 1fr;
       width: 1920px;
       height: 1080px;
-    }
-
-    /* ── SIDEBAR ───────────────────────────────────────────────── */
-    .sidebar {
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      padding: 36px 18px 28px 24px;
-      border-right: 1px solid var(--border);
-    }
-
-    .logo-cu {
-      font-size: 0.62rem;
-      letter-spacing: 0.24em;
-      text-transform: uppercase;
-      color: var(--dim);
-      line-height: 1;
-      margin-bottom: 8px;
-    }
-    .logo-4th {
-      font-size: 6.4rem;
-      font-weight: 700;
-      line-height: 0.78;
-      letter-spacing: -0.02em;
-      color: var(--white);
-    }
-    .logo-space {
-      font-size: 1.3rem;
-      letter-spacing: 0.32em;
-      text-transform: uppercase;
-      color: var(--dim);
-      margin-top: 8px;
-      display: block;
-    }
-    .logo-rule {
-      width: 28px;
-      height: 2px;
-      background: var(--accent);
-      margin: 22px 0 18px;
-    }
-    .logo-tagline {
-      font-size: 0.68rem;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      color: var(--dim);
-      line-height: 1.7;
-    }
-
-    .sidebar-foot {
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-    .foot-label {
-      font-size: 0.58rem;
-      letter-spacing: 0.18em;
-      text-transform: uppercase;
-      color: rgba(255,255,255,0.16);
-    }
-    #timestamp {
-      font-size: 0.7rem;
-      letter-spacing: 0.1em;
-      color: rgba(255,255,255,0.22);
     }
 
     /* ── PANELS ────────────────────────────────────────────────── */
@@ -275,23 +212,6 @@
 
 <div class="shell">
 
-  <!-- SIDEBAR -->
-  <aside class="sidebar">
-    <div>
-      <div class="logo-cu">Concordia University</div>
-      <div class="logo-4th">4TH</div>
-      <span class="logo-space">Space</span>
-      <div class="logo-rule"></div>
-      <div class="logo-tagline">
-        Programming<br>&amp; Events
-      </div>
-    </div>
-    <div class="sidebar-foot">
-      <div class="foot-label">Last updated</div>
-      <div id="timestamp">—</div>
-    </div>
-  </aside>
-
   <!-- UPCOMING (Concordia RSS) -->
   <section class="panel upcoming">
     <div class="panel-header">
@@ -459,31 +379,24 @@
         return;
       }
 
-      // YouTube Atom uses yt: namespace for videoId and media: for thumbnail/title
-      // We fish nodes by local name to avoid namespace lookup issues across browsers
       function getByLocal(parent, localName) {
         return Array.from(parent.getElementsByTagName('*'))
           .find(el => el.localName === localName);
       }
 
       entries.forEach((entry, i) => {
-        // Title
         const title = getByLocal(entry, 'title')?.textContent || 'Untitled';
 
-        // Video ID → reliable maxres thumbnail
         const videoId = getByLocal(entry, 'videoId')?.textContent || '';
         let imageUrl = '';
         if (videoId) {
-          // Try maxresdefault; browsers will show nothing if it 404s (rare) — acceptable
           imageUrl = `https://i.ytimg.com/vi/${videoId}/maxresdefault.jpg`;
         } else {
-          // Fall back to media:thumbnail url attribute
           const thumb = getByLocal(entry, 'thumbnail');
           imageUrl = thumb?.getAttribute('url') || '';
         }
 
         const published = entry.querySelector('published')?.textContent || '';
-        // <link rel="alternate" href="..."> is the video URL
         const linkEl = Array.from(entry.querySelectorAll('link'))
           .find(l => l.getAttribute('rel') === 'alternate');
         const link = linkEl?.getAttribute('href') || '';
@@ -505,16 +418,11 @@
   }
 
   // ── Init ───────────────────────────────────────────────────────
-  function tick() {
-    document.getElementById('timestamp').textContent =
-      new Date().toLocaleTimeString('en-CA', { hour: '2-digit', minute: '2-digit' });
-  }
-
   async function load() {
     const upGrid = document.getElementById('upcomingGrid');
     const ytGrid = document.getElementById('ytGrid');
     await Promise.all([loadUpcoming(upGrid), loadYouTube(ytGrid)]);
-    tick();
+    document.getElementById && (document.title = document.title); // no-op tick
   }
 
   load();
