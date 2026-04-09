@@ -238,6 +238,7 @@
     <button class="zoom-button" onclick="nextEvent()" title="Next event">→</button>
     <button class="zoom-button" onclick="changeZoom(-0.1)" title="Zoom out">−</button>
     <button class="zoom-button" onclick="changeZoom(0.1)" title="Zoom in">+</button>
+    <button class="zoom-button" id="linkBtn" onclick="openCurrentEventLink()" title="Open event page">↗</button>
     <button class="zoom-button" id="saveBtn" onclick="saveAsPng()" title="Save as PNG"><span style="font-size: 1.5rem;">⬇</span></button>
   </div>
 
@@ -262,6 +263,7 @@
       if (current) current.classList.remove('visible');
       currentEventIndex = (currentEventIndex + 1) % allEvents.length;
       allEvents[currentEventIndex].classList.add('visible');
+      updateLinkButton();
     }
 
     function previousEvent() {
@@ -270,6 +272,23 @@
       if (current) current.classList.remove('visible');
       currentEventIndex = (currentEventIndex - 1 + allEvents.length) % allEvents.length;
       allEvents[currentEventIndex].classList.add('visible');
+      updateLinkButton();
+    }
+
+    function openCurrentEventLink() {
+      const current = allEvents[currentEventIndex];
+      const url = current?.dataset?.link;
+      if (url) {
+        window.open(url, '_blank');
+      }
+    }
+
+    function updateLinkButton() {
+      const btn = document.getElementById('linkBtn');
+      const current = allEvents[currentEventIndex];
+      const url = current?.dataset?.link;
+      btn.disabled = !url;
+      btn.title = url ? `Open event page: ${url}` : 'No link available';
     }
 
     // Logitech presenter remote + keyboard navigation
@@ -335,6 +354,21 @@
       items.forEach(item => {
         const title = item.querySelector('title')?.textContent || 'Untitled';
         const descriptionRaw = item.querySelector('description')?.textContent || '';
+
+        // Grab the RSS item link — try <link> first, then <guid>
+        const linkNode = item.querySelector('link');
+        // <link> is often a text node sibling rather than a real element in RSS;
+        // fall back to nextSibling text or guid if querySelector returns nothing useful
+        let itemLink = '';
+        if (linkNode && linkNode.textContent.trim()) {
+          itemLink = linkNode.textContent.trim();
+        } else {
+          const guid = item.querySelector('guid');
+          if (guid && guid.textContent.trim()) {
+            itemLink = guid.textContent.trim();
+          }
+        }
+
         const tempDiv = document.createElement('div');
         tempDiv.innerHTML = descriptionRaw;
         const img = tempDiv.querySelector('img');
@@ -355,6 +389,11 @@
         const eventDiv = document.createElement('div');
         eventDiv.className = 'event';
         eventDiv.style.backgroundImage = `url(${imageUrl})`;
+
+        // Store the RSS link on the element for easy retrieval later
+        if (itemLink) {
+          eventDiv.dataset.link = itemLink;
+        }
 
         const overlay = document.createElement('div');
         overlay.className = 'event-overlay';
@@ -401,6 +440,9 @@
       overlays.forEach(overlay => {
         overlay.style.transform = `scale(${zoomLevel})`;
       });
+
+      // Reflect link availability for the first event
+      updateLinkButton();
     }
 
     async function saveAsPng() {
@@ -408,11 +450,9 @@
       const controls = document.getElementById('zoom-controls');
       const clock = document.getElementById('clock');
 
-      // Disable button and show feedback while rendering
       saveBtn.disabled = true;
       saveBtn.textContent = '…';
 
-      // Hide UI chrome that shouldn't appear in the export
       controls.style.display = 'none';
       clock.style.display = 'none';
 
@@ -422,13 +462,12 @@
         const canvas = await html2canvas(container, {
           useCORS: true,
           allowTaint: false,
-          scale: 2,               // 2× resolution for crisp 1080p output
+          scale: 2,
           backgroundColor: '#111',
           logging: false,
           imageTimeout: 10000,
         });
 
-        // Build a clean filename from the current event title
         const visibleEvent = allEvents[currentEventIndex];
         const titleText = visibleEvent?.querySelector('.event-title')?.innerText || 'event';
         const safeName = titleText
@@ -445,7 +484,6 @@
         console.error('PNG export failed:', err);
         alert('Export failed — see console for details.');
       } finally {
-        // Restore UI
         controls.style.display = '';
         clock.style.display = '';
         saveBtn.disabled = false;
