@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <link rel="stylesheet" href="https://use.typekit.net/paf7uxj.css">
+  <title>Concordia 4th Space Events</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "gill-sans-nova-condensed", sans-serif;
+      background: #111;
+      color: #ccc;
+      min-height: 100vh;
+      min-height: -webkit-fill-available;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ── Clock ── */
+    #clock {
+      position: fixed;
+      top: max(env(safe-area-inset-top), 14px);
+      left: 0;
+      right: 0;
+      text-align: center;
+      font-size: clamp(2rem, 8vw, 3.5rem);
+      font-weight: 300;
+      color: #ccc;
+      z-index: 200;
+      font-family: "gill-sans-nova-condensed", sans-serif;
+      pointer-events: none;
+      letter-spacing: 0.04em;
+    }
+
+    /* ── Event slide area ── */
+    #eventContainer {
+      position: fixed;
+      inset: 0;
+      border: 5px solid white;
+    }
+
+    .event {
+      position: absolute;
+      inset: 0;
+      background-size: cover;
+      background-position: center;
+      opacity: 0;
+      z-index: 0;
+      transition: opacity 1.8s ease-in-out;
+      pointer-events: none;
+    }
+
+    .event.visible {
+      opacity: 1;
+      z-index: 1;
+      pointer-events: auto;
+    }
+
+    .event::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.62);
+      z-index: 0;
+    }
+
+    /* ── Text overlay ── */
+    .event-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 0 6vw max(calc(env(safe-area-inset-bottom) + 90px), 104px) 6vw;
+      gap: clamp(6px, 2vw, 18px);
+    }
+
+    .event-date {
+      font-size: clamp(0.85rem, 3.8vw, 1.6rem);
+      font-weight: 100;
+      font-style: italic;
+      line-height: 1;
+      opacity: 0.85;
+      color: #ccc;
+      letter-spacing: 0.02em;
+    }
+
+    .event-title {
+      font-size: clamp(2.2rem, 11vw, 5.5rem);
+      font-weight: bold;
+      line-height: 1;
+      color: #ccc;
+      word-break: keep-all;
+      overflow-wrap: break-word;
+    }
+
+    .event-description {
+      font-size: clamp(1rem, 4.5vw, 2rem);
+      line-height: 1.2;
+      opacity: 0.9;
+      color: #ccc;
+    }
+
+    /* ── Bottom control bar ── */
+    #controls {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 300;
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      padding: 10px 12px max(env(safe-area-inset-bottom), 12px);
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border-top: 1px solid rgba(255,255,255,0.15);
+      gap: 6px;
+    }
+
+    .ctrl-btn {
+      flex: 1;
+      min-width: 44px;
+      max-width: 70px;
+      height: 50px;
+      font-size: 1.4rem;
+      color: white;
+      background: rgba(255,255,255,0.12);
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+
+    .ctrl-btn:active {
+      background: rgba(255,255,255,0.3);
+      transform: scale(0.94);
+    }
+
+    .ctrl-btn:disabled {
+      opacity: 0.35;
+      pointer-events: none;
+    }
+
+    /* ── Event counter pill ── */
+    #eventCounter {
+      font-size: 0.85rem;
+      color: rgba(255,255,255,0.5);
+      min-width: 40px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    /* ── Loading ── */
+    #loadingSpinner {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 1.2rem;
+      font-family: sans-serif;
+      z-index: 999;
+      background: #111;
+    }
+
+    /* ── Emoji eyes ── */
+    .emoji-eye {
+      display: inline-block;
+      width: 1em;
+      height: auto;
+      vertical-align: middle;
+      max-width: 1em;
+      max-height: 1em;
+      object-fit: contain;
+    }
+
+    .no-break-look {
+      white-space: nowrap;
+      display: inline-block;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="loadingSpinner">Loading events…</div>
+
+  <div id="eventContainer"></div>
+
+  <div id="clock"></div>
+
+  <div id="controls">
+    <button class="ctrl-btn" onclick="location.reload()" title="Reload" aria-label="Reload">↺</button>
+    <button class="ctrl-btn" onclick="previousEvent()" title="Previous" aria-label="Previous event">‹</button>
+    <span id="eventCounter">–/–</span>
+    <button class="ctrl-btn" onclick="nextEvent()" title="Next" aria-label="Next event">›</button>
+    <button class="ctrl-btn" id="linkBtn" onclick="openCurrentEventLink()" title="Open event page" aria-label="Open event link" disabled>∗</button>
+    <button class="ctrl-btn" id="saveBtn" onclick="saveAsPng()" title="Save as PNG" aria-label="Save as PNG">⬇</button>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+  <script>
+    let currentEventIndex = 0;
+    let allEvents = [];
+
+    /* ── Navigation ── */
+    function showEvent(index) {
+      allEvents.forEach(e => e.classList.remove('visible'));
+      currentEventIndex = (index + allEvents.length) % allEvents.length;
+      allEvents[currentEventIndex].classList.add('visible');
+      document.getElementById('eventCounter').textContent =
+        `${currentEventIndex + 1}/${allEvents.length}`;
+      updateLinkButton();
+    }
+
+    function nextEvent() {
+      if (!allEvents.length) return;
+      showEvent(currentEventIndex + 1);
+    }
+
+    function previousEvent() {
+      if (!allEvents.length) return;
+      showEvent(currentEventIndex - 1);
+    }
+
+    function openCurrentEventLink() {
+      const url = allEvents[currentEventIndex]?.dataset?.link;
+      if (url) window.open(url, '_blank');
+    }
+
+    function updateLinkButton() {
+      const btn = document.getElementById('linkBtn');
+      const url = allEvents[currentEventIndex]?.dataset?.link;
+      btn.disabled = !url;
+    }
+
+    /* ── Keyboard (Logitech presenter) ── */
+    document.addEventListener('keydown', e => {
+      if (e.key === 'ArrowRight' || e.key === 'PageDown') { e.preventDefault(); nextEvent(); }
+      else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); previousEvent(); }
+    });
+
+    /* ── Touch swipe ── */
+    let touchStartX = 0;
+    document.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; }, { passive: true });
+    document.addEventListener('touchend', e => {
+      const dx = e.changedTouches[0].clientX - touchStartX;
+      if (Math.abs(dx) > 50) { dx < 0 ? nextEvent() : previousEvent(); }
+    }, { passive: true });
+
+    /* ── Helpers ── */
+    function parseEventTime(str) {
+      try {
+        const m = str.match(/(\w+)\s+(\d{1,2}),\s+(\d{4})/);
+        if (!m) return null;
+        const months = {January:0,February:1,March:2,April:3,May:4,June:5,July:6,August:7,September:8,October:9,November:10,December:11};
+        return new Date(+m[3], months[m[1]], +m[2]);
+      } catch { return null; }
+    }
+
+    function processTitleWithEyes(title) {
+      let t = title
+        .replace(/L👀k:/g, '<span class="no-break-look">L<img src="https://raw.githubusercontent.com/CU4thSpace/EVENTS/main/emoji-eyes.png" alt="👀" class="emoji-eye">k:</span>')
+        .replace(/L👀K:/g, '<span class="no-break-look">L<img src="https://raw.githubusercontent.com/CU4thSpace/EVENTS/main/emoji-eyes.png" alt="👀" class="emoji-eye">K:</span>')
+        .replace(/L👀k/g,  '<span class="no-break-look">L<img src="https://raw.githubusercontent.com/CU4thSpace/EVENTS/main/emoji-eyes.png" alt="👀" class="emoji-eye">k</span>')
+        .replace(/L👀K/g,  '<span class="no-break-look">L<img src="https://raw.githubusercontent.com/CU4thSpace/EVENTS/main/emoji-eyes.png" alt="👀" class="emoji-eye">K</span>');
+      return t.replace(/:\s+/g, ':<br>');
+    }
+
+    /* ── Fetch & render ── */
+    async function fetchAndDisplayEvents() {
+      try {
+        const response = await fetch(
+          'https://www.concordia.ca/content/concordia/en/next-gen/4th-space/programming/RSSCAL/_jcr_content/content-main/grid_container_671899525/grid-container-parsys/events_list.xml',
+          { cache: 'no-store' }
+        );
+        const text = await response.text();
+        const xml = new DOMParser().parseFromString(text, 'application/xml');
+        const items = Array.from(xml.querySelectorAll('item'));
+
+        const container = document.getElementById('eventContainer');
+        container.innerHTML = '';
+
+        const eventDivs = [];
+        const imgPromises = [];
+
+        items.forEach(item => {
+          const title = item.querySelector('title')?.textContent || 'Untitled';
+          const descRaw = item.querySelector('description')?.textContent || '';
+
+          const linkNode = item.querySelector('link');
+          let itemLink = linkNode?.textContent?.trim() || item.querySelector('guid')?.textContent?.trim() || '';
+
+          const tmp = document.createElement('div');
+          tmp.innerHTML = descRaw;
+          const imageUrl = tmp.querySelector('img')?.src || 'https://via.placeholder.com/800x450';
+          const descTime = tmp.querySelector('p')?.textContent?.trim() || '';
+
+          let eventDate = parseEventTime(descTime);
+          if (!eventDate) {
+            const pub = item.querySelector('pubDate')?.textContent;
+            eventDate = pub ? new Date(pub) : new Date();
+          }
+
+          const eventDiv = document.createElement('div');
+          eventDiv.className = 'event';
+          eventDiv.style.backgroundImage = `url(${imageUrl})`;
+          if (itemLink) eventDiv.dataset.link = itemLink;
+
+          const overlay = document.createElement('div');
+          overlay.className = 'event-overlay';
+
+          const dateDiv = document.createElement('div');
+          dateDiv.className = 'event-date';
+          dateDiv.textContent = eventDate.toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric' });
+          overlay.appendChild(dateDiv);
+
+          const titleDiv = document.createElement('div');
+          titleDiv.className = 'event-title';
+          titleDiv.innerHTML = processTitleWithEyes(title);
+          if (title.length > 25) {
+            const scale = Math.max(0.65, 25 / title.length);
+            titleDiv.style.fontSize = `clamp(${1.6*scale}rem, ${11*scale}vw, ${5.5*scale}rem)`;
+          }
+          overlay.appendChild(titleDiv);
+
+          eventDiv.appendChild(overlay);
+          container.appendChild(eventDiv);
+          eventDivs.push(eventDiv);
+
+          const img = new Image();
+          imgPromises.push(new Promise(res => { img.onload = img.onerror = res; img.src = imageUrl; }));
+        });
+
+        await Promise.all(imgPromises);
+        document.getElementById('loadingSpinner').style.display = 'none';
+
+        allEvents = eventDivs;
+        currentEventIndex = 0;
+        if (eventDivs.length) showEvent(0);
+
+      } catch (err) {
+        console.error('Fetch failed:', err);
+        document.getElementById('loadingSpinner').textContent = 'Could not load events.';
+      }
+    }
+
+    /* ── Save as PNG ── */
+    async function saveAsPng() {
+      const saveBtn = document.getElementById('saveBtn');
+      const controls = document.getElementById('controls');
+      const clock = document.getElementById('clock');
+
+      saveBtn.disabled = true;
+      saveBtn.textContent = '…';
+      controls.style.display = 'none';
+      clock.style.display = 'none';
+
+      try {
+        const canvas = await html2canvas(document.getElementById('eventContainer'), {
+          useCORS: true, allowTaint: false, scale: 2,
+          backgroundColor: '#111', logging: false, imageTimeout: 10000,
+        });
+        const titleText = allEvents[currentEventIndex]?.querySelector('.event-title')?.innerText || 'event';
+        const safeName = titleText.replace(/[^a-z0-9]/gi,'_').replace(/_+/g,'_').toLowerCase().slice(0,50);
+        const a = document.createElement('a');
+        a.download = `4thspace_${safeName}.png`;
+        a.href = canvas.toDataURL('image/png');
+        a.click();
+      } catch (err) {
+        console.error('PNG export failed:', err);
+        alert('Export failed — see console for details.');
+      } finally {
+        controls.style.display = '';
+        clock.style.display = '';
+        saveBtn.disabled = false;
+        saveBtn.textContent = '⬇';
+      }
+    }
+
+    /* ── Clock ── */
+    function updateClock() {
+      const n = new Date();
+      document.getElementById('clock').textContent =
+        `${String(n.getHours()).padStart(2,'0')}:${String(n.getMinutes()).padStart(2,'0')}:${String(n.getSeconds()).padStart(2,'0')}`;
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    /* ── Init ── */
+    fetchAndDisplayEvents();
+    setInterval(fetchAndDisplayEvents, 6 * 60 * 60 * 1000);
+  </script>
+</body>
+</html>
