@@ -36,11 +36,19 @@
       letter-spacing: 0.04em;
     }
 
+    /* ── Full-screen border overlay (sits above everything) ── */
+    #border-overlay {
+      position: fixed;
+      inset: 0;
+      border: 5px solid white;
+      z-index: 9999;
+      pointer-events: none;
+    }
+
     /* ── Event slide area ── */
     #eventContainer {
       position: fixed;
       inset: 0;
-      border: 5px solid white;
     }
 
     .event {
@@ -193,6 +201,8 @@
   </style>
 </head>
 <body>
+
+  <div id="border-overlay"></div>
 
   <div id="loadingSpinner">Loading events…</div>
 
