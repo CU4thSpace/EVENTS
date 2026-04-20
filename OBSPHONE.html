@@ -414,11 +414,13 @@
 
     /* ── Size border overlay to stop at controls bar ── */
     function updateBorderHeight() {
-      const h = document.getElementById('controls').getBoundingClientRect().height;
-      document.documentElement.style.setProperty('--controls-height', h + 'px');
+      const rect = document.getElementById('controls').getBoundingClientRect();
+      const fromBottom = window.innerHeight - rect.top;
+      document.documentElement.style.setProperty('--controls-height', fromBottom + 'px');
     }
     window.addEventListener('resize', updateBorderHeight);
     updateBorderHeight();
+    setTimeout(updateBorderHeight, 100);
 
     /* ── Init ── */
     fetchAndDisplayEvents();
