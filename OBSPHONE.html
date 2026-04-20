@@ -36,10 +36,13 @@
       letter-spacing: 0.04em;
     }
 
-    /* ── Full-screen border overlay (sits above everything) ── */
+    /* ── Image frame border — stops at top of controls bar ── */
     #border-overlay {
       position: fixed;
-      inset: 0;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: var(--controls-height, 74px);
       border: 5px solid white;
       z-index: 9999;
       pointer-events: none;
@@ -216,7 +219,7 @@
     <span id="eventCounter">–/–</span>
     <button class="ctrl-btn" onclick="nextEvent()" title="Next" aria-label="Next event">›</button>
     <button class="ctrl-btn" id="linkBtn" onclick="openCurrentEventLink()" title="Open event page" aria-label="Open event link" disabled>∗</button>
-    <button class="ctrl-btn" id="saveBtn" onclick="saveAsPng()" title="Save as PNG" aria-label="Save as PNG">⬇</button>
+    <button class="ctrl-btn" id="saveBtn" onclick="saveAsPng()" title="Save as PNG" aria-label="Save as PNG">&#8595;</button>
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -396,7 +399,7 @@
         controls.style.display = '';
         clock.style.display = '';
         saveBtn.disabled = false;
-        saveBtn.textContent = '⬇';
+        saveBtn.textContent = '↓';
       }
     }
 
@@ -408,6 +411,14 @@
     }
     setInterval(updateClock, 1000);
     updateClock();
+
+    /* ── Size border overlay to stop at controls bar ── */
+    function updateBorderHeight() {
+      const h = document.getElementById('controls').getBoundingClientRect().height;
+      document.documentElement.style.setProperty('--controls-height', h + 'px');
+    }
+    window.addEventListener('resize', updateBorderHeight);
+    updateBorderHeight();
 
     /* ── Init ── */
     fetchAndDisplayEvents();
