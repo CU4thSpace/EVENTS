@@ -200,6 +200,7 @@
     <button class="zoom-button" onclick="changeZoom(0.1)"            title="Zoom in">+</button>
     <button class="zoom-button" id="linkBtn" onclick="openCurrentEventLink()" title="Open event page">∗</button>
     <button class="zoom-button" id="saveBtn" onclick="saveAsPng()"   title="Save as PNG">⬇</button>
+    <button class="zoom-button" id="wrapBtn" onclick="cycleTitleWidth()" title="Cycle title width">↵</button>
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -263,6 +264,27 @@
       const url = allEvents[currentEventIndex]?.dataset?.link;
       btn.disabled = !url;
       btn.title = url ? `Open: ${url}` : 'No link';
+    }
+
+    /* ─────────────────────────────────────────────
+       Title max-width cycling
+    ───────────────────────────────────────────── */
+    const widthPresets = [
+      { label: '78%', value: '78%' },
+      { label: '55%', value: '55%' },
+      { label: '40%', value: '40%' },
+      { label: '95%', value: '95%' },
+    ];
+    let widthIndex = 0;
+
+    function cycleTitleWidth() {
+      widthIndex = (widthIndex + 1) % widthPresets.length;
+      const { value, label } = widthPresets[widthIndex];
+      document.querySelectorAll('.event-title').forEach(t => {
+        t.style.maxWidth = value;
+      });
+      const btn = document.getElementById('wrapBtn');
+      btn.title = `Title width: ${label} (click to cycle)`;
     }
 
     /* Keyboard / Logitech remote */
