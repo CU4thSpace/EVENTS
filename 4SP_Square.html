@@ -23,27 +23,31 @@
     /* ── zoom controls ── */
     #zoom-controls {
       position: fixed;
-      bottom: 20px;
-      right: 20px;
+      bottom: 1.5vmin;
+      right: 1.5vmin;
       z-index: 9999;
       display: flex;
-      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 1vmin;
+      max-width: calc(100vw - 3vmin);
     }
 
     .zoom-button {
-      font-size: 2rem;
+      font-size: clamp(0.9rem, 3.5vmin, 2rem);
       color: white;
       background: rgba(255,255,255,0.2);
       border: none;
-      border-radius: 8px;
-      width: 50px;
-      height: 50px;
+      border-radius: clamp(4px, 1vmin, 8px);
+      width:  clamp(32px, 6vmin, 50px);
+      height: clamp(32px, 6vmin, 50px);
       cursor: pointer;
       line-height: 1;
       text-align: center;
       display: flex;
       align-items: center;
       justify-content: center;
+      touch-action: manipulation;
     }
     .zoom-button:hover  { background: rgba(255,255,255,0.4); }
     .zoom-button:disabled { opacity: 0.4; cursor: not-allowed; }
