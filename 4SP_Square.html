@@ -404,20 +404,6 @@
         }
         overlay.appendChild(titleDiv);
 
-        if (descHeading) {
-          const descDiv = document.createElement('div');
-          descDiv.className = 'event-description';
-          descDiv.textContent = descHeading;
-          overlay.appendChild(descDiv);
-        }
-
-        if (descTime) {
-          const timeDiv = document.createElement('div');
-          timeDiv.className = 'event-time';
-          timeDiv.textContent = descTime;
-          overlay.appendChild(timeDiv);
-        }
-
         eventDiv.appendChild(overlay);
         zoomContent.appendChild(eventDiv);
         eventDivs.push(eventDiv);
