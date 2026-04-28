@@ -404,6 +404,13 @@
         }
         overlay.appendChild(titleDiv);
 
+        if (descHeading) {
+          const descDiv = document.createElement('div');
+          descDiv.className = 'event-description';
+          descDiv.textContent = descHeading;
+          overlay.appendChild(descDiv);
+        }
+
         eventDiv.appendChild(overlay);
         zoomContent.appendChild(eventDiv);
         eventDivs.push(eventDiv);
