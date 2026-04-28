@@ -143,6 +143,17 @@
       color: #ccc;
     }
 
+    .event-time {
+      max-width: 78%;
+      font-size: 1.85rem;
+      font-style: italic;
+      font-weight: 100;
+      line-height: 1.2;
+      opacity: 0.8;
+      color: #ccc;
+      letter-spacing: 0.02em;
+    }
+
     /* ── clock — same position but in square space ── */
     #clock {
       position: absolute;
@@ -345,7 +356,8 @@
         const imgEl = tmp.querySelector('img');
         const imageUrl = imgEl ? imgEl.src : 'https://via.placeholder.com/300';
 
-        const descTime = tmp.querySelector('p')?.textContent?.trim() || '';
+        const descHeading = tmp.querySelector('h2')?.textContent?.trim() || '';
+        const descTime    = tmp.querySelector('p')?.textContent?.trim()  || '';
         let eventDate  = parseEventTime(descTime);
         if (!eventDate) {
           const pub = item.querySelector('pubDate')?.textContent;
@@ -375,6 +387,20 @@
           titleDiv.style.fontSize = `${6.5 * s}rem`;
         }
         overlay.appendChild(titleDiv);
+
+        if (descHeading) {
+          const descDiv = document.createElement('div');
+          descDiv.className = 'event-description';
+          descDiv.textContent = descHeading;
+          overlay.appendChild(descDiv);
+        }
+
+        if (descTime) {
+          const timeDiv = document.createElement('div');
+          timeDiv.className = 'event-time';
+          timeDiv.textContent = descTime;
+          overlay.appendChild(timeDiv);
+        }
 
         eventDiv.appendChild(overlay);
         zoomContent.appendChild(eventDiv);
