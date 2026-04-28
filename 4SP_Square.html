@@ -16,7 +16,8 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      min-height: 100vh;
+      width: 100vw;
+      height: 100vh;
     }
 
     /* ── zoom controls ── */
@@ -47,13 +48,13 @@
     .zoom-button:hover  { background: rgba(255,255,255,0.4); }
     .zoom-button:disabled { opacity: 0.4; cursor: not-allowed; }
 
-    /* ── square container — always 1080×1080 logical px, scaled to fit viewport ── */
+    /* ── square container — fixed 1080×1080, JS scales to fit smaller viewport dimension ── */
     .event-container {
       position: relative;
       width:  1080px;
       height: 1080px;
+      flex-shrink: 0;
       overflow: hidden;
-      /* Scale to fit the viewport while keeping crisp 1:1 pixel mapping */
       transform-origin: center center;
     }
 
@@ -219,11 +220,14 @@
   <script>
     /* ─────────────────────────────────────────────
        Scale the 1080×1080 container to fill the
-       viewport without distortion.
+       viewport without distortion. The container is
+       always square — whichever viewport dimension
+       is smaller determines the scale.
     ───────────────────────────────────────────── */
     function fitContainer() {
       const c = document.getElementById('eventContainer');
-      const scale = Math.min(window.innerWidth / 1080, window.innerHeight / 1080);
+      const side = Math.min(window.innerWidth, window.innerHeight);
+      const scale = side / 1080;
       c.style.transform = `scale(${scale})`;
     }
     fitContainer();
@@ -427,30 +431,56 @@
     }
 
     /* ─────────────────────────────────────────────
-       PNG export — captures the raw 1080×1080 container
-       (controls & clock hidden, container temporarily
-        un-scaled so html2canvas sees 1080px exactly)
+       PNG export — always exactly 1080×1080 px.
+       Clones the container into a hidden off-screen
+       wrapper at native size so html2canvas never
+       sees viewport scaling or device pixel ratio.
     ───────────────────────────────────────────── */
     async function saveAsPng() {
       const saveBtn  = document.getElementById('saveBtn');
       const controls = document.getElementById('zoom-controls');
       const clock    = document.getElementById('clock');
-      const container = document.getElementById('eventContainer');
+      const source   = document.getElementById('eventContainer');
 
       saveBtn.disabled = true;
       saveBtn.textContent = '…';
       controls.style.display = 'none';
       clock.style.display    = 'none';
 
-      /* Remove viewport scaling so html2canvas sees native 1080px */
-      const prevTransform = container.style.transform;
-      container.style.transform = 'none';
+      /* Build a wrapper that positions the clone at exactly 1080×1080,
+         off-screen so it never affects layout. */
+      const wrapper = document.createElement('div');
+      wrapper.style.cssText = [
+        'position:fixed',
+        'top:0', 'left:0',
+        'width:1080px', 'height:1080px',
+        'overflow:hidden',
+        'z-index:-9999',
+        'pointer-events:none',
+        'opacity:0',          /* invisible but still rendered */
+      ].join(';');
+
+      /* Deep-clone the container; strip any viewport scaling transform */
+      const clone = source.cloneNode(true);
+      clone.style.transform = 'none';
+      clone.style.width      = '1080px';
+      clone.style.height     = '1080px';
+      clone.style.position   = 'relative';
+      clone.style.top        = '0';
+      clone.style.left       = '0';
+
+      /* Remove the clock from the clone (it's outside the container in the source
+         but we cloned it in just in case) */
+      clone.querySelector('#clock')?.remove();
+
+      wrapper.appendChild(clone);
+      document.body.appendChild(wrapper);
 
       try {
-        const canvas = await html2canvas(container, {
+        const canvas = await html2canvas(clone, {
           useCORS: true,
           allowTaint: false,
-          scale: 1,           /* 1 px = 1 canvas px → exact 1080×1080 output */
+          scale: 1,            /* 1 logical px → 1 canvas px = true 1080×1080 */
           width: 1080,
           height: 1080,
           backgroundColor: '#111',
@@ -458,10 +488,13 @@
           imageTimeout: 10000,
         });
 
+        /* Verify output dimensions (dev sanity check) */
+        console.log(`Exported canvas: ${canvas.width}×${canvas.height}px`);
+
         const titleText = allEvents[currentEventIndex]
           ?.querySelector('.event-title')?.innerText || 'event';
         const safeName = titleText
-          .replace(/[^a-z0-9]/gi,'_').replace(/_+/g,'_').toLowerCase().slice(0,50);
+          .replace(/[^a-z0-9]/gi, '_').replace(/_+/g, '_').toLowerCase().slice(0, 50);
 
         const a = document.createElement('a');
         a.download = `4thspace_${safeName}.png`;
@@ -471,9 +504,9 @@
         console.error('PNG export failed:', err);
         alert('Export failed — see console for details.');
       } finally {
-        container.style.transform = prevTransform;
-        controls.style.display    = '';
-        clock.style.display       = '';
+        document.body.removeChild(wrapper);
+        controls.style.display = '';
+        clock.style.display    = '';
         saveBtn.disabled = false;
         saveBtn.textContent = '⬇';
       }
