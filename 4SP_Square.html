@@ -314,11 +314,17 @@
     function parseEventTime(timeString) {
       try {
         const m = timeString.match(/(\w+)\s+(\d{1,2}),\s+(\d{4})/);
-        if (!m) return null;
+        if (!m) return { date: null, startTimeStr: '' };
         const monthMap = {January:0,February:1,March:2,April:3,May:4,June:5,
                           July:6,August:7,September:8,October:9,November:10,December:11};
-        return new Date(parseInt(m[3]), monthMap[m[1]], parseInt(m[2]));
-      } catch { return null; }
+        const date = new Date(parseInt(m[3]), monthMap[m[1]], parseInt(m[2]));
+
+        /* Extract the first time token, e.g. "3 p.m." or "10:30 a.m." */
+        const timeMatch = timeString.match(/\d{1,2}(?::\d{2})?\s*[ap]\.m\./i);
+        const startTimeStr = timeMatch ? timeMatch[0].replace(/\s+/g, '\u00A0') : '';
+
+        return { date, startTimeStr };
+      } catch { return { date: null, startTimeStr: '' }; }
     }
 
     function processTitleWithEyes(title) {
@@ -362,7 +368,8 @@
 
         const descHeading = tmp.querySelector('h2')?.textContent?.trim() || '';
         const descTime    = tmp.querySelector('p')?.textContent?.trim()  || '';
-        let eventDate  = parseEventTime(descTime);
+        const { date: parsedDate, startTimeStr } = parseEventTime(descTime);
+        let eventDate = parsedDate;
         if (!eventDate) {
           const pub = item.querySelector('pubDate')?.textContent;
           eventDate  = pub ? new Date(pub) : new Date();
@@ -379,7 +386,8 @@
 
         const dateDiv = document.createElement('div');
         dateDiv.className = 'event-date';
-        dateDiv.textContent = eventDate.toLocaleDateString('en-US', {weekday:'long',month:'long',day:'numeric'});
+        const dateLabel = eventDate.toLocaleDateString('en-US', {weekday:'long',month:'long',day:'numeric'});
+        dateDiv.textContent = startTimeStr ? `${dateLabel}  ${startTimeStr}` : dateLabel;
         overlay.appendChild(dateDiv);
 
         const titleDiv = document.createElement('div');
