@@ -131,10 +131,7 @@
 
 <script>
   function parseEventTime(timeString) {
-    // Parse time strings like "October 1, 2025, 10 a.m. - 2 p.m."
-    // Returns an object with startTime and endTime Date objects
     try {
-      // Extract date components
       const dateMatch = timeString.match(/(\w+)\s+(\d{1,2}),\s+(\d{4})/);
       let eventDate = new Date();
       
@@ -150,7 +147,6 @@
         eventDate = new Date(year, month, day);
       }
       
-      // Extract start and end times - handle both "a.m./p.m." and "AM/PM"
       const timePattern = /(\d{1,2})(?::(\d{2}))?\s*([ap]\.?m\.?)/gi;
       const matches = Array.from(timeString.matchAll(timePattern));
       
@@ -161,7 +157,6 @@
         const minutes = match[2] ? parseInt(match[2]) : 0;
         const meridiem = match[3].toLowerCase().replace(/\./g, '');
 
-        // Convert to 24-hour format
         if (meridiem === 'pm' && hours !== 12) {
           hours += 12;
         } else if (meridiem === 'am' && hours === 12) {
@@ -186,86 +181,86 @@
   function findCurrentEvent(events) {
     const now = new Date();
     
-    // Sort events by start time
     const sortedEvents = events.sort((a, b) => {
       if (!a.startTime || !b.startTime) return 0;
       return a.startTime - b.startTime;
     });
 
-    // Find the next event that hasn't ended yet
     for (let i = 0; i < sortedEvents.length; i++) {
       const event = sortedEvents[i];
       if (!event.startTime) continue;
       
-      // If event has an end time, check if it has ended
       if (event.endTime) {
         if (now < event.endTime) {
           return event;
         }
       } else {
-        // No end time, show if it hasn't started yet or just started
         if (now < event.startTime) {
           return event;
         }
       }
     }
 
-    // If all events have ended, show the first one (likely tomorrow's first event)
     return sortedEvents[0];
   }
 
   async function fetchAndDisplayEvents() {
-    const response = await fetch('https://www.concordia.ca/content/concordia/en/next-gen/4th-space/programming/RSSCAL/_jcr_content/content-main/grid_container_671899525/grid-container-parsys/events_list.xml', {
-      cache: 'no-store'
-    });
-    const text = await response.text();
-    const parser = new DOMParser();
-    const xml = parser.parseFromString(text, 'application/xml');
-    const items = Array.from(xml.querySelectorAll('item'));
+    try {
+      const response = await fetch('https://www.concordia.ca/content/concordia/en/next-gen/4th-space/programming/RSSCAL/_jcr_content/content-main/grid_container_671899525/grid-container-parsys/events_list.xml', {
+        cache: 'no-store'
+      });
 
-    const container = document.getElementById('eventContainer');
-    container.innerHTML = '';
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
-    if (items.length === 0) {
-      document.getElementById('loadingSpinner').textContent = 'No events found';
-      return;
+      const text = await response.text();
+      const parser = new DOMParser();
+      const xml = parser.parseFromString(text, 'application/xml');
+      const items = Array.from(xml.querySelectorAll('item'));
+
+      const container = document.getElementById('eventContainer');
+      container.innerHTML = '';
+
+      if (items.length === 0) {
+        document.getElementById('loadingSpinner').textContent = 'No events found';
+        return;
+      }
+
+      const events = items.map(item => {
+        const title = item.querySelector('title')?.textContent || 'Untitled';
+        const descriptionRaw = item.querySelector('description')?.textContent || '';
+
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = descriptionRaw;
+        const img = tempDiv.querySelector('img');
+        const imageUrl = img ? img.src : '';
+
+        const descHeading = tempDiv.querySelector('h2')?.textContent.trim() || '';
+        const descTime = tempDiv.querySelector('p')?.textContent.trim() || '';
+
+        const { startTime, endTime } = parseEventTime(descTime);
+
+        return {
+          title,
+          imageUrl,
+          descHeading,
+          descTime,
+          startTime,
+          endTime
+        };
+      });
+
+      const currentEvent = findCurrentEvent(events);
+
+      console.log('Total events:', events.length);
+      console.log('Displaying event:', currentEvent.title, 'at', currentEvent.descTime);
+
+      displayEvent(currentEvent, container);
+
+      document.getElementById('loadingSpinner').style.display = 'none';
+    } catch (err) {
+      console.error('Failed to load events:', err);
+      document.getElementById('loadingSpinner').textContent = 'Error: ' + err.message;
     }
-
-    // Parse all events with their times
-    const events = items.map(item => {
-      const title = item.querySelector('title')?.textContent || 'Untitled';
-      const descriptionRaw = item.querySelector('description')?.textContent || '';
-
-      const tempDiv = document.createElement('div');
-      tempDiv.innerHTML = descriptionRaw;
-      const img = tempDiv.querySelector('img');
-      const imageUrl = img ? img.src : '';
-
-      const descHeading = tempDiv.querySelector('h2')?.textContent.trim() || '';
-      const descTime = tempDiv.querySelector('p')?.textContent.trim() || '';
-
-      const { startTime, endTime } = parseEventTime(descTime);
-
-      return {
-        title,
-        imageUrl,
-        descHeading,
-        descTime,
-        startTime,
-        endTime
-      };
-    });
-
-    // Find which event should be displayed right now
-    const currentEvent = findCurrentEvent(events);
-
-    console.log('Total events:', events.length);
-    console.log('Displaying event:', currentEvent.title, 'at', currentEvent.descTime);
-
-    // Display the current event
-    displayEvent(currentEvent, container);
-
-    document.getElementById('loadingSpinner').style.display = 'none';
   }
 
   function displayEvent(eventData, container) {
@@ -273,7 +268,7 @@
     eventDiv.className = 'event';
     
     if (eventData.imageUrl) {
-      eventDiv.style.backgroundImage = `url("${imageUrl}")`;
+      eventDiv.style.backgroundImage = `url("${eventData.imageUrl}")`; // ← fixed
     } else {
       eventDiv.style.backgroundColor = '#2E3092';
     }
@@ -329,9 +324,6 @@
   }
 
   fetchAndDisplayEvents();
-  // Check every 5 minutes for event updates
-  setInterval(fetchAndDisplayEvents, 5 * 60 * 1000);
-  // Also check every minute to see if we should switch to a new event
   setInterval(fetchAndDisplayEvents, 60 * 1000);
 </script>
   
