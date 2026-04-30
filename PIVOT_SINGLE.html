@@ -13,21 +13,22 @@
     }
 
     .event-container {
-      position: relative;
-      height: 100vh;
-      width: 100vw;
+      position: absolute;
+      width: 1080px;
+      height: 1920px;
       overflow: hidden;
       padding: 0;
       margin: 0;
       box-sizing: border-box;
+      transform-origin: top left;
     }
 
     .event {
       position: absolute;
       top: 0;
       left: 0;
-      width: 100%;
-      height: 100%;
+      width: 1080px;
+      height: 1920px;
       background-size: cover;
       background-position: center;
       display: flex;
@@ -322,6 +323,19 @@
     text = text.replace(/\s+(with|and|for|at|in|on)\s+/gi, '\n$1 ');
     return text;
   }
+
+  function scaleToFit() {
+    const container = document.getElementById('eventContainer');
+    const scaleX = window.innerWidth / 1080;
+    const scaleY = window.innerHeight / 1920;
+    const scale = Math.min(scaleX, scaleY);
+    container.style.transform = `scale(${scale})`;
+    container.style.left = `${(window.innerWidth - 1080 * scale) / 2}px`;
+    container.style.top = `${(window.innerHeight - 1920 * scale) / 2}px`;
+  }
+
+  scaleToFit();
+  window.addEventListener('resize', scaleToFit);
 
   fetchAndDisplayEvents();
   setInterval(fetchAndDisplayEvents, 60 * 1000);
