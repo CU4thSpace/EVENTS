@@ -226,6 +226,9 @@
   <div class="overlay-url" id="overlayUrl"></div>
 </div>
 
+<!-- Hidden focus trap: BrightSign only fires key events when an element has focus -->
+<input id="keyTrap" type="text" autocomplete="off" style="position:fixed;opacity:0;width:1px;height:1px;top:0;left:0;border:none;outline:none;pointer-events:none;" />
+
 <script>
   // Grid order: row 1 = 7,8,9 / row 2 = 4,5,6 / row 3 = 1,2,3
   const destinations = [
@@ -314,9 +317,24 @@
     setTimeout(() => { window.location.href = dest.url; }, 800);
   }
 
-  document.addEventListener('keydown', (e) => {
-    // Resolve digit via event.key, event.code, or legacy event.keyCode
-    // Covers top-row digits, numpad, and older Chromium builds on BrightSign
+  // ── FOCUS TRAP ───────────────────────────────────────────────────
+  // BrightSign only fires key events on an element that has focus.
+  // We keep a hidden <input> permanently focused so no screen tap is needed.
+  const trap = document.getElementById('keyTrap');
+
+  function reFocus() {
+    try { trap.focus({ preventScroll: true }); } catch(e) {}
+  }
+  reFocus();
+  document.addEventListener('click', reFocus);
+  document.addEventListener('focusout', function() { setTimeout(reFocus, 50); });
+  window.addEventListener('load', reFocus);
+  setTimeout(reFocus, 300);
+  setTimeout(reFocus, 800);
+  setTimeout(reFocus, 2000);
+
+  // ── KEY HANDLER ──────────────────────────────────────────────────
+  function handleKey(e) {
     let digit = null;
 
     if (/^[0-9]$/.test(e.key)) {
@@ -324,15 +342,15 @@
     } else if (/^(Digit|Numpad)([0-9])$/.test(e.code || '')) {
       digit = (e.code || '').slice(-1);
     } else if (e.keyCode >= 49 && e.keyCode <= 57) {
-      digit = String(e.keyCode - 48);        // top-row 1-9
+      digit = String(e.keyCode - 48);
     } else if (e.keyCode >= 97 && e.keyCode <= 105) {
-      digit = String(e.keyCode - 96);        // numpad 1-9
+      digit = String(e.keyCode - 96);
     } else if (e.keyCode === 48 || e.keyCode === 96) {
-      digit = '0';                           // top-row or numpad 0
+      digit = '0';
     }
 
-    // Debug: show raw key info in status bar so you can confirm what BrightSign sees
-    statusMsg.textContent = 'key="' + (e.key||'') + '"  code="' + (e.code||'') + '"  keyCode=' + e.keyCode + (digit ? '  →  ' + digit : '');
+    // Debug: shows what BrightSign is actually sending — remove once confirmed working
+    statusMsg.textContent = 'key="' + (e.key||'?') + '"  code="' + (e.code||'?') + '"  keyCode=' + e.keyCode + (digit ? '  →  ' + digit : '  (unrecognised)');
     statusMsg.classList.remove('launching');
 
     if (digit === null) return;
@@ -344,8 +362,23 @@
       statusMsg.classList.add('launching');
       overlayUrl.textContent = 'https://cu4thspace.github.io/EVENTS/TODAY_SELECT.html';
       overlay.classList.add('visible');
-      setTimeout(() => { window.location.href = 'https://cu4thspace.github.io/EVENTS/TODAY_SELECT.html'; }, 800);
+      setTimeout(function() { window.location.href = 'https://cu4thspace.github.io/EVENTS/TODAY_SELECT.html'; }, 800);
     }
+  }
+
+  // Attach to both trap and document, both keydown and keypress
+  // (BrightSign OS 9+ added a keypress event to its keyboard JS object)
+  trap.addEventListener('keydown',  handleKey);
+  trap.addEventListener('keypress', handleKey);
+  document.addEventListener('keydown',  handleKey);
+  document.addEventListener('keypress', handleKey);
+
+  // 'input' fires when the trap value changes — last-resort fallback if
+  // keydown/keypress are suppressed but the character still arrives
+  trap.addEventListener('input', function() {
+    var val = trap.value.replace(/\D/g, '');
+    trap.value = '';
+    if (val) handleKey({ key: val.slice(-1), code: '', keyCode: 0 });
   });
 </script>
 </body>
