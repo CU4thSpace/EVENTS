@@ -20,7 +20,6 @@
     user-select: none;
   }
 
-  /* ── same container + border system as events page ── */
   .event-container {
     position: relative;
     width: 100vw;
@@ -31,7 +30,6 @@
     overflow: hidden;
     box-sizing: border-box;
   }
-
   @media (max-aspect-ratio: 16/9) {
     .event-container { width: 100vw; height: calc(100vw * 9 / 16); }
   }
@@ -49,24 +47,16 @@
     pointer-events: none;
   }
 
-  .zoom-content {
+  /* inner area */
+  .inner {
     position: absolute;
     top: 6px; left: 6px;
     width: calc(100% - 12px);
     height: calc(100% - 12px);
     overflow: hidden;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    padding: 5.2% 5.2% 9.3%;
   }
 
-  /* ── clock — same as events page ── */
-  #clock { display: none; }
-
-  .hero-text { display: none; }
-
-  /* ── key grid ── */
+  /* key grid fills inner area with small margin */
   .key-grid {
     position: absolute;
     top: 50%;
@@ -75,9 +65,9 @@
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     grid-template-rows: repeat(3, 1fr);
-    gap: clamp(6px, 1vw, 14px);
-    width: calc(100% - 10.4%);
-    height: calc(100% - 18.6%);
+    gap: 12px;
+    width: calc(100% - 40px);
+    height: calc(100% - 60px);
     z-index: 10;
   }
 
@@ -87,20 +77,18 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 4px;
     background: rgba(255,255,255,0.04);
     border: 3px solid rgba(255,255,255,0.85);
     border-radius: 18px;
     cursor: pointer;
     transition: background 0.18s ease, border-color 0.18s ease, transform 0.12s ease;
     overflow: hidden;
+    padding: 8px;
   }
-
   .key:hover {
     background: rgba(255,255,255,0.1);
     border-color: #fff;
   }
-
   .key.active {
     background: rgba(255,255,255,0.18);
     border-color: #fff;
@@ -109,61 +97,45 @@
 
   .key-num {
     font-family: "gill-sans-nova-condensed", sans-serif;
-    font-size: clamp(0.7rem, 1.6vw, 1.5rem);
     font-weight: bold;
     font-style: italic;
     color: #ccc;
-    opacity: 0.5;
+    opacity: 0.45;
     position: absolute;
-    top: 8px; left: 10px;
+    top: 10px; left: 14px;
     line-height: 1;
-  }
-
-  .key-icon {
-    font-size: clamp(1.2rem, 2.5vw, 2.4rem);
-    line-height: 1;
-    margin-top: 4px;
+    /* size set by JS to match key-name size */
   }
 
   .key-name {
     font-family: "gill-sans-nova-condensed", sans-serif;
-    font-size: clamp(0.7rem, 1.6vw, 1.5rem);
     font-weight: bold;
     color: #ccc;
-    opacity: 0.9;
+    opacity: 0.95;
     text-align: center;
-    padding: 0 6px;
-    line-height: 1.1;
+    line-height: 1;
     letter-spacing: 0.04em;
+    white-space: nowrap;
+    /* font-size set per-element by JS fitText */
   }
 
-  /* unassigned */
-  .key.empty {
-    background: transparent;
-    border: 1px dashed rgba(255,255,255,0.1);
-    opacity: 0.3;
-    cursor: default;
-  }
-  .key.empty:hover { background: transparent; border-color: rgba(255,255,255,0.1); transform: none; }
-
-  /* ── status bar ── */
+  /* status bar */
   .status-bar {
     position: absolute;
-    bottom: 2%;
+    bottom: 6px;
     left: 50%;
     transform: translateX(-50%);
-    width: calc(100% - 10.4%);
+    width: calc(100% - 52px);
     display: flex;
     align-items: center;
     justify-content: space-between;
     z-index: 10;
-    padding-top: clamp(4px, 0.5vw, 8px);
+    padding-top: 6px;
     border-top: 1px solid rgba(255,255,255,0.15);
   }
-
   .status-msg {
     font-family: "gill-sans-nova-condensed", sans-serif;
-    font-size: clamp(0.6rem, 1.4vw, 1.3rem);
+    font-size: 22px;
     font-weight: 100;
     font-style: italic;
     color: #ccc;
@@ -172,17 +144,16 @@
     transition: opacity 0.3s;
   }
   .status-msg.launching { opacity: 1; }
-
   .status-hint {
     font-family: "gill-sans-nova-condensed", sans-serif;
-    font-size: clamp(0.55rem, 1.1vw, 1rem);
+    font-size: 18px;
     color: #ccc;
     opacity: 0.4;
     letter-spacing: 0.06em;
     text-transform: uppercase;
   }
 
-  /* ── launch overlay ── */
+  /* launch overlay */
   .overlay {
     position: fixed; inset: 0;
     background: rgba(17,17,17,0.92);
@@ -194,25 +165,22 @@
     transition: opacity 0.3s;
   }
   .overlay.visible { opacity: 1; pointer-events: all; }
-
   .overlay-label {
     font-family: "gill-sans-nova-condensed", sans-serif;
-    font-size: clamp(1rem, 2.8vw, 2.8rem);
+    font-size: 48px;
     font-weight: 100;
     font-style: italic;
     color: #ccc;
     opacity: 0.7;
     letter-spacing: 0.06em;
   }
-
   .overlay-url {
     font-family: "gill-sans-nova-condensed", sans-serif;
-    font-size: clamp(1.2rem, 3.2vw, 3.2rem);
+    font-size: 36px;
     font-weight: bold;
     color: #ccc;
     letter-spacing: 0.02em;
   }
-
   .spinner {
     width: 40px; height: 40px;
     border: 2px solid rgba(255,255,255,0.15);
@@ -222,8 +190,8 @@
   }
   @keyframes spin { to { transform: rotate(360deg); } }
 
-  /* entrance animations */
-  .key { animation: fadeUp 0.5s ease both; }
+  /* entrance */
+  .key { animation: fadeUp 0.45s ease both; }
   .key:nth-child(1) { animation-delay: 0.05s; }
   .key:nth-child(2) { animation-delay: 0.10s; }
   .key:nth-child(3) { animation-delay: 0.15s; }
@@ -233,9 +201,8 @@
   .key:nth-child(7) { animation-delay: 0.35s; }
   .key:nth-child(8) { animation-delay: 0.40s; }
   .key:nth-child(9) { animation-delay: 0.45s; }
-
   @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(16px); }
+    from { opacity: 0; transform: translateY(14px); }
     to   { opacity: 1; transform: translateY(0); }
   }
 </style>
@@ -244,31 +211,15 @@
 
 <div class="event-container">
   <div class="border-overlay"></div>
-
-  <div id="clock">--:--:--</div>
-
-  <div class="zoom-content">
-
-    <!-- hero — bottom-left, mirrors event-overlay positioning -->
-    <div class="hero-text">
-      <div class="hero-label">Interactive Kiosk — 4th Space</div>
-      <div class="hero-title">Select a destination</div>
-      <div class="hero-sub">Press a key 1–9 on the keypad</div>
-    </div>
-
-    <!-- 3×3 key grid — right side -->
+  <div class="inner">
     <div class="key-grid" id="keyGrid"></div>
-
-    <!-- status — below grid -->
     <div class="status-bar">
       <span class="status-msg" id="statusMsg">Awaiting keypress…</span>
       <span class="status-hint">Keys 1–9 · 0 = Home</span>
     </div>
-
   </div>
 </div>
 
-<!-- launch overlay -->
 <div class="overlay" id="overlay">
   <div class="spinner"></div>
   <div class="overlay-label">Launching</div>
@@ -276,59 +227,90 @@
 </div>
 
 <script>
-  // ─── DESTINATIONS ─────────────────────────────────────────────────
   // Grid order: row 1 = 7,8,9 / row 2 = 4,5,6 / row 3 = 1,2,3
   const destinations = [
-    { key: '7', name: 'YOUTUBE',      url: 'https://www.youtube.com/CU4thSpace',                      icon: '▶️' },
-    { key: '8', name: 'INSTAGRAM',    url: 'https://www.instagram.com/cu4thspace/',                   icon: '📸' },
-    { key: '9', name: 'SELECTOR',     url: 'https://cu4thspace.github.io/EVENTS/TODAY_SELECT.html',  icon: '🗂️' },
-    { key: '4', name: 'CONCORDIA',    url: 'https://www.concordia.ca/',                               icon: '🏛️' },
-    { key: '5', name: 'CLOCK',        url: 'https://cu4thspace.github.io/EVENTS/LOCAL_CLOCK.html',   icon: '🕐' },
-    { key: '6', name: 'LOWER THIRDS', url: 'https://cu4thspace.github.io/LOWERTHIRDS/L3byCSV.html',  icon: '📺' },
-    { key: '1', name: 'TODAY',        url: 'https://cu4thspace.github.io/EVENTS/OBSCLOCKDATE',        icon: '📅' },
-    { key: '2', name: 'COUNTDOWN',    url: 'https://cu4thspace.github.io/EVENTS/COUNTDOWN',           icon: '⏳' },
-    { key: '3', name: '4th Space',    url: 'https://www.concordia.ca/next-gen/4th-space.html',        icon: '🎓' },
+    { key: '7', name: 'YOUTUBE',      url: 'https://www.youtube.com/CU4thSpace'                     },
+    { key: '8', name: 'INSTAGRAM',    url: 'https://www.instagram.com/cu4thspace/'                  },
+    { key: '9', name: 'SELECTOR',     url: 'https://cu4thspace.github.io/EVENTS/TODAY_SELECT.html' },
+    { key: '4', name: 'CONCORDIA',    url: 'https://www.concordia.ca/'                              },
+    { key: '5', name: 'CLOCK',        url: 'https://cu4thspace.github.io/EVENTS/LOCAL_CLOCK.html'  },
+    { key: '6', name: 'LOWER THIRDS', url: 'https://cu4thspace.github.io/LOWERTHIRDS/L3byCSV.html' },
+    { key: '1', name: 'TODAY',        url: 'https://cu4thspace.github.io/EVENTS/OBSCLOCKDATE'       },
+    { key: '2', name: 'COUNTDOWN',    url: 'https://cu4thspace.github.io/EVENTS/COUNTDOWN'          },
+    { key: '3', name: '4TH SPACE',    url: 'https://www.concordia.ca/next-gen/4th-space.html'       },
   ];
-  // ──────────────────────────────────────────────────────────────────
 
-  const grid      = document.getElementById('keyGrid');
-  const statusMsg = document.getElementById('statusMsg');
-  const overlay   = document.getElementById('overlay');
+  const grid       = document.getElementById('keyGrid');
+  const statusMsg  = document.getElementById('statusMsg');
+  const overlay    = document.getElementById('overlay');
   const overlayUrl = document.getElementById('overlayUrl');
-  const clockEl   = document.getElementById('clock');
 
-  destinations.forEach((dest, i) => {
+  // Build buttons
+  destinations.forEach((dest) => {
     const el = document.createElement('div');
-    el.className = 'key' + (dest.url ? '' : ' empty');
+    el.className = 'key';
     el.dataset.key = dest.key;
-    if (dest.url) {
-      el.innerHTML = `
-        <span class="key-num">${dest.key}</span>
-        <span class="key-icon">${dest.icon || '🔗'}</span>
-        <span class="key-name">${dest.name}</span>
-      `;
-      el.addEventListener('click', () => triggerDestination(dest.key));
-    } else {
-      el.innerHTML = `<span class="key-num">${dest.key}</span>`;
-    }
+    el.innerHTML = `<span class="key-num">${dest.key}</span><span class="key-name">${dest.name}</span>`;
+    el.addEventListener('click', () => triggerDestination(dest.key));
     grid.appendChild(el);
   });
+
+  // Fit text: binary-search the largest px font-size where the label
+  // fits within (cellWidth - padding) and (cellHeight - padding).
+  function fitTextToCell(nameEl, numEl, cell) {
+    const padX = 24;  // total horizontal breathing room
+    const padY = 60;  // room for the key-num + breathing room top/bottom
+    const maxW = cell.offsetWidth  - padX;
+    const maxH = cell.offsetHeight - padY;
+
+    let lo = 10, hi = 600, best = lo;
+    nameEl.style.fontSize = hi + 'px';
+
+    while (lo <= hi) {
+      const mid = Math.floor((lo + hi) / 2);
+      nameEl.style.fontSize = mid + 'px';
+      const w = nameEl.scrollWidth;
+      const h = nameEl.scrollHeight;
+      if (w <= maxW && h <= maxH) {
+        best = mid;
+        lo = mid + 1;
+      } else {
+        hi = mid - 1;
+      }
+    }
+    nameEl.style.fontSize = best + 'px';
+    // key number at 30% of label size, min 16px
+    numEl.style.fontSize = Math.max(16, Math.round(best * 0.30)) + 'px';
+  }
+
+  function fitAllKeys() {
+    const keys = grid.querySelectorAll('.key');
+    keys.forEach((cell) => {
+      const nameEl = cell.querySelector('.key-name');
+      const numEl  = cell.querySelector('.key-num');
+      if (nameEl && numEl) fitTextToCell(nameEl, numEl, cell);
+    });
+  }
+
+  // Run after layout settles
+  window.addEventListener('load', fitAllKeys);
+  window.addEventListener('resize', fitAllKeys);
+  // Also run after a short delay to catch font loading
+  setTimeout(fitAllKeys, 300);
+  setTimeout(fitAllKeys, 800);
 
   function triggerDestination(keyChar) {
     const dest = destinations.find(d => d.key === keyChar);
     if (!dest || !dest.url) return;
-
     const keyEl = grid.querySelector(`[data-key="${keyChar}"]`);
     if (keyEl) {
       keyEl.classList.add('active');
       setTimeout(() => keyEl.classList.remove('active'), 300);
     }
-
     statusMsg.textContent = 'Launching ' + dest.name + '…';
     statusMsg.classList.add('launching');
     overlayUrl.textContent = dest.url;
     overlay.classList.add('visible');
-
     setTimeout(() => { window.location.href = dest.url; }, 800);
   }
 
@@ -342,16 +324,6 @@
       setTimeout(() => { window.location.href = 'https://cu4thspace.github.io/EVENTS/TODAY_SELECT.html'; }, 800);
     }
   });
-
-  function updateClock() {
-    const now = new Date();
-    const h = String(now.getHours()).padStart(2,'0');
-    const m = String(now.getMinutes()).padStart(2,'0');
-    const s = String(now.getSeconds()).padStart(2,'0');
-    clockEl.textContent = h + ':' + m + ':' + s;
-  }
-  updateClock();
-  setInterval(updateClock, 1000);
 </script>
 </body>
 </html>
