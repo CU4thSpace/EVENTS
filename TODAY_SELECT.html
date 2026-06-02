@@ -315,8 +315,31 @@
   }
 
   document.addEventListener('keydown', (e) => {
-    if (/^[1-9]$/.test(e.key)) triggerDestination(e.key);
-    if (e.key === '0') {
+    // Resolve digit via event.key, event.code, or legacy event.keyCode
+    // Covers top-row digits, numpad, and older Chromium builds on BrightSign
+    let digit = null;
+
+    if (/^[0-9]$/.test(e.key)) {
+      digit = e.key;
+    } else if (/^(Digit|Numpad)([0-9])$/.test(e.code || '')) {
+      digit = (e.code || '').slice(-1);
+    } else if (e.keyCode >= 49 && e.keyCode <= 57) {
+      digit = String(e.keyCode - 48);        // top-row 1-9
+    } else if (e.keyCode >= 97 && e.keyCode <= 105) {
+      digit = String(e.keyCode - 96);        // numpad 1-9
+    } else if (e.keyCode === 48 || e.keyCode === 96) {
+      digit = '0';                           // top-row or numpad 0
+    }
+
+    // Debug: show raw key info in status bar so you can confirm what BrightSign sees
+    statusMsg.textContent = 'key="' + (e.key||'') + '"  code="' + (e.code||'') + '"  keyCode=' + e.keyCode + (digit ? '  →  ' + digit : '');
+    statusMsg.classList.remove('launching');
+
+    if (digit === null) return;
+
+    if (/^[1-9]$/.test(digit)) {
+      triggerDestination(digit);
+    } else if (digit === '0') {
       statusMsg.textContent = 'Returning to initial state…';
       statusMsg.classList.add('launching');
       overlayUrl.textContent = 'https://cu4thspace.github.io/EVENTS/TODAY_SELECT.html';
