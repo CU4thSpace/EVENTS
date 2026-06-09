@@ -47,7 +47,6 @@
     pointer-events: none;
   }
 
-  /* inner area */
   .inner {
     position: absolute;
     top: 6px; left: 6px;
@@ -56,7 +55,6 @@
     overflow: hidden;
   }
 
-  /* key grid fills inner area with small margin */
   .key-grid {
     position: absolute;
     top: 50%;
@@ -85,15 +83,8 @@
     overflow: hidden;
     padding: 8px;
   }
-  .key:hover {
-    background: rgba(255,255,255,0.1);
-    border-color: #fff;
-  }
-  .key.active {
-    background: rgba(255,255,255,0.18);
-    border-color: #fff;
-    transform: scale(0.94);
-  }
+  .key:hover { background: rgba(255,255,255,0.1); border-color: #fff; }
+  .key.active { background: rgba(255,255,255,0.18); border-color: #fff; transform: scale(0.94); }
 
   .key-num {
     font-family: "gill-sans-nova-condensed", sans-serif;
@@ -104,7 +95,6 @@
     position: absolute;
     top: 10px; left: 14px;
     line-height: 1;
-    /* size set by JS to match key-name size */
   }
 
   .key-name {
@@ -116,10 +106,8 @@
     line-height: 1;
     letter-spacing: 0.04em;
     white-space: nowrap;
-    /* font-size set per-element by JS fitText */
   }
 
-  /* status bar */
   .status-bar {
     position: absolute;
     bottom: 6px;
@@ -153,7 +141,6 @@
     text-transform: uppercase;
   }
 
-  /* launch overlay */
   .overlay {
     position: fixed; inset: 0;
     background: rgba(17,17,17,0.92);
@@ -190,7 +177,6 @@
   }
   @keyframes spin { to { transform: rotate(360deg); } }
 
-  /* entrance */
   .key { animation: fadeUp 0.45s ease both; }
   .key:nth-child(1) { animation-delay: 0.05s; }
   .key:nth-child(2) { animation-delay: 0.10s; }
@@ -226,12 +212,14 @@
   <div class="overlay-url" id="overlayUrl"></div>
 </div>
 
-<!-- Hidden focus trap: BrightSign only fires key events when an element has focus -->
-<input id="keyTrap" type="text" autocomplete="off" style="position:fixed;opacity:0;width:1px;height:1px;top:0;left:0;border:none;outline:none;pointer-events:none;" />
+<!-- Focus trap: BrightSign only fires key events on a focused element -->
+<input id="keyTrap" type="text" autocomplete="off"
+  style="position:fixed;opacity:0;width:1px;height:1px;top:0;left:0;border:none;outline:none;pointer-events:none;" />
 
 <script>
+  // ─── DESTINATIONS ─────────────────────────────────────────────────
   // Grid order: row 1 = 7,8,9 / row 2 = 4,5,6 / row 3 = 1,2,3
-  const destinations = [
+  var destinations = [
     { key: '7', name: 'YOUTUBE',      url: 'https://www.youtube.com/CU4thSpace'                     },
     { key: '8', name: 'INSTAGRAM',    url: 'https://www.instagram.com/cu4thspace/'                  },
     { key: '9', name: 'SELECTOR',     url: 'https://cu4thspace.github.io/EVENTS/TODAY_SELECT.html' },
@@ -243,85 +231,79 @@
     { key: '3', name: '4TH SPACE',    url: 'https://www.concordia.ca/next-gen/4th-space.html'       },
   ];
 
-  const grid       = document.getElementById('keyGrid');
-  const statusMsg  = document.getElementById('statusMsg');
-  const overlay    = document.getElementById('overlay');
-  const overlayUrl = document.getElementById('overlayUrl');
+  // BrightSign XD1034 numpad keycodes (ASCII codes 48–57)
+  // keycode 48 = 0, 49 = 1, 50 = 2, 51 = 3, 52 = 4,
+  // keycode 53 = 5, 54 = 6, 55 = 7, 56 = 8, 57 = 9
+  var KEYCODE_MAP = {
+    48: '0', 49: '1', 50: '2', 51: '3', 52: '4',
+    53: '5', 54: '6', 55: '7', 56: '8', 57: '9'
+  };
 
-  // Build buttons
-  destinations.forEach((dest) => {
-    const el = document.createElement('div');
+  var grid       = document.getElementById('keyGrid');
+  var statusMsg  = document.getElementById('statusMsg');
+  var overlay    = document.getElementById('overlay');
+  var overlayUrl = document.getElementById('overlayUrl');
+  var trap       = document.getElementById('keyTrap');
+
+  // ── Build buttons ──
+  destinations.forEach(function(dest) {
+    var el = document.createElement('div');
     el.className = 'key';
     el.dataset.key = dest.key;
-    el.innerHTML = `<span class="key-num">${dest.key}</span><span class="key-name">${dest.name}</span>`;
-    el.addEventListener('click', () => triggerDestination(dest.key));
+    el.innerHTML = '<span class="key-num">' + dest.key + '</span><span class="key-name">' + dest.name + '</span>';
+    el.addEventListener('click', function() { triggerDestination(dest.key); });
     grid.appendChild(el);
   });
 
-  // Fit text: binary-search the largest px font-size where the label
-  // fits within (cellWidth - padding) and (cellHeight - padding).
+  // ── Fit text to each cell ──
   function fitTextToCell(nameEl, numEl, cell) {
-    const padX = 24;  // total horizontal breathing room
-    const padY = 60;  // room for the key-num + breathing room top/bottom
-    const maxW = cell.offsetWidth  - padX;
-    const maxH = cell.offsetHeight - padY;
-
-    let lo = 10, hi = 600, best = lo;
-    nameEl.style.fontSize = hi + 'px';
-
+    var padX = 24, padY = 60;
+    var maxW = cell.offsetWidth  - padX;
+    var maxH = cell.offsetHeight - padY;
+    var lo = 10, hi = 600, best = lo;
     while (lo <= hi) {
-      const mid = Math.floor((lo + hi) / 2);
+      var mid = Math.floor((lo + hi) / 2);
       nameEl.style.fontSize = mid + 'px';
-      const w = nameEl.scrollWidth;
-      const h = nameEl.scrollHeight;
-      if (w <= maxW && h <= maxH) {
-        best = mid;
-        lo = mid + 1;
-      } else {
-        hi = mid - 1;
-      }
+      if (nameEl.scrollWidth <= maxW && nameEl.scrollHeight <= maxH) { best = mid; lo = mid + 1; }
+      else { hi = mid - 1; }
     }
     nameEl.style.fontSize = best + 'px';
-    // key number at 30% of label size, min 16px
     numEl.style.fontSize = Math.max(16, Math.round(best * 0.30)) + 'px';
   }
 
   function fitAllKeys() {
-    const keys = grid.querySelectorAll('.key');
-    keys.forEach((cell) => {
-      const nameEl = cell.querySelector('.key-name');
-      const numEl  = cell.querySelector('.key-num');
+    grid.querySelectorAll('.key').forEach(function(cell) {
+      var nameEl = cell.querySelector('.key-name');
+      var numEl  = cell.querySelector('.key-num');
       if (nameEl && numEl) fitTextToCell(nameEl, numEl, cell);
     });
   }
-
-  // Run after layout settles
   window.addEventListener('load', fitAllKeys);
   window.addEventListener('resize', fitAllKeys);
-  // Also run after a short delay to catch font loading
   setTimeout(fitAllKeys, 300);
   setTimeout(fitAllKeys, 800);
 
+  // ── Trigger destination ──
   function triggerDestination(keyChar) {
-    const dest = destinations.find(d => d.key === keyChar);
+    var dest = null;
+    for (var i = 0; i < destinations.length; i++) {
+      if (destinations[i].key === keyChar) { dest = destinations[i]; break; }
+    }
     if (!dest || !dest.url) return;
-    const keyEl = grid.querySelector(`[data-key="${keyChar}"]`);
+
+    var keyEl = grid.querySelector('[data-key="' + keyChar + '"]');
     if (keyEl) {
       keyEl.classList.add('active');
-      setTimeout(() => keyEl.classList.remove('active'), 300);
+      setTimeout(function() { keyEl.classList.remove('active'); }, 300);
     }
-    statusMsg.textContent = 'Launching ' + dest.name + '…';
+    statusMsg.textContent = 'Launching ' + dest.name + '\u2026';
     statusMsg.classList.add('launching');
     overlayUrl.textContent = dest.url;
     overlay.classList.add('visible');
-    setTimeout(() => { window.location.href = dest.url; }, 800);
+    setTimeout(function() { window.location.href = dest.url; }, 800);
   }
 
-  // ── FOCUS TRAP ───────────────────────────────────────────────────
-  // BrightSign only fires key events on an element that has focus.
-  // We keep a hidden <input> permanently focused so no screen tap is needed.
-  const trap = document.getElementById('keyTrap');
-
+  // ── Focus trap ──
   function reFocus() {
     try { trap.focus({ preventScroll: true }); } catch(e) {}
   }
@@ -333,52 +315,57 @@
   setTimeout(reFocus, 800);
   setTimeout(reFocus, 2000);
 
-  // ── KEY HANDLER ──────────────────────────────────────────────────
+  // ── Key handler ──
+  // BrightSign XD1034 reports numpad digits via a bare `keycode` property
+  // (not the standard event.keyCode). We check all known locations.
   function handleKey(e) {
-    let digit = null;
+    var digit = null;
 
-    if (/^[0-9]$/.test(e.key)) {
-      digit = e.key;
-    } else if (/^(Digit|Numpad)([0-9])$/.test(e.code || '')) {
-      digit = (e.code || '').slice(-1);
-    } else if (e.keyCode >= 49 && e.keyCode <= 57) {
-      digit = String(e.keyCode - 48);
-    } else if (e.keyCode >= 97 && e.keyCode <= 105) {
-      digit = String(e.keyCode - 96);
-    } else if (e.keyCode === 48 || e.keyCode === 96) {
-      digit = '0';
+    // 1. BrightSign-specific: bare keycode property on the event object
+    var bsCode = e.keycode !== undefined ? e.keycode : null;
+    if (bsCode !== null && KEYCODE_MAP[bsCode] !== undefined) {
+      digit = KEYCODE_MAP[bsCode];
     }
 
-    // Debug: shows what BrightSign is actually sending — remove once confirmed working
-    statusMsg.textContent = 'key="' + (e.key||'?') + '"  code="' + (e.code||'?') + '"  keyCode=' + e.keyCode + (digit ? '  →  ' + digit : '  (unrecognised)');
-    statusMsg.classList.remove('launching');
+    // 2. Standard event.keyCode (same ASCII values, kept as fallback)
+    if (digit === null && KEYCODE_MAP[e.keyCode] !== undefined) {
+      digit = KEYCODE_MAP[e.keyCode];
+    }
+
+    // 3. Standard event.key single-digit string
+    if (digit === null && e.key && /^[0-9]$/.test(e.key)) {
+      digit = e.key;
+    }
+
+    // 4. event.code: Digit0–Digit9 or Numpad0–Numpad9
+    if (digit === null && e.code && /^(Digit|Numpad)([0-9])$/.test(e.code)) {
+      digit = e.code.slice(-1);
+    }
 
     if (digit === null) return;
 
-    if (/^[1-9]$/.test(digit)) {
-      triggerDestination(digit);
-    } else if (digit === '0') {
-      statusMsg.textContent = 'Returning to initial state…';
+    if (digit === '0') {
+      statusMsg.textContent = 'Returning home\u2026';
       statusMsg.classList.add('launching');
       overlayUrl.textContent = 'https://cu4thspace.github.io/EVENTS/TODAY_SELECT.html';
       overlay.classList.add('visible');
       setTimeout(function() { window.location.href = 'https://cu4thspace.github.io/EVENTS/TODAY_SELECT.html'; }, 800);
+    } else {
+      triggerDestination(digit);
     }
   }
 
-  // Attach to both trap and document, both keydown and keypress
-  // (BrightSign OS 9+ added a keypress event to its keyboard JS object)
-  trap.addEventListener('keydown',  handleKey);
-  trap.addEventListener('keypress', handleKey);
-  document.addEventListener('keydown',  handleKey);
-  document.addEventListener('keypress', handleKey);
+  // Attach to every event type that BrightSign might use
+  ['keydown', 'keypress', 'keyup'].forEach(function(type) {
+    trap.addEventListener(type, handleKey);
+    document.addEventListener(type, handleKey);
+  });
 
-  // 'input' fires when the trap value changes — last-resort fallback if
-  // keydown/keypress are suppressed but the character still arrives
+  // input fallback: character arrived but key events were suppressed
   trap.addEventListener('input', function() {
     var val = trap.value.replace(/\D/g, '');
     trap.value = '';
-    if (val) handleKey({ key: val.slice(-1), code: '', keyCode: 0 });
+    if (val) handleKey({ keycode: undefined, keyCode: 0, key: val.slice(-1), code: '' });
   });
 </script>
 </body>
