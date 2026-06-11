@@ -291,26 +291,53 @@
       btn.title = url ? `Open event page: ${url}` : 'No link available';
     }
 
-    // BrightSign XD1034 keypad input — e.keycode only (non-standard lowercase property)
-    // 52 = numpad 4 → previous event
-    // 54 = numpad 6 → next event
-    // 56 = numpad 8 → navigate to Lower Thirds
-    // 50 = numpad 2 → reload page
+    // Keyboard input — two parallel paths in one handler:
+    //
+    // PATH A — BrightSign XD1034 (e.keycode, non-standard lowercase property)
+    //   50 = numpad 2 → reload
+    //   52 = numpad 4 → previous event
+    //   54 = numpad 6 → next event
+    //   56 = numpad 8 → navigate to Lower Thirds
+    //
+    // PATH B — Standard PC keyboard (e.key)
+    //   ArrowLeft / PageUp  → previous event
+    //   ArrowRight / PageDown → next event
+    //   r / R               → reload
     document.addEventListener('keydown', function(e) {
+      // PATH A: BrightSign numpad keycodes
       switch (e.keycode) {
         case 52:
           e.preventDefault();
           previousEvent();
-          break;
+          return;
         case 54:
           e.preventDefault();
           nextEvent();
-          break;
+          return;
         case 56:
           e.preventDefault();
           window.location.href = 'https://cu4thspace.github.io/LOWERTHIRDS/L3byCSV.html';
-          break;
+          return;
         case 50:
+          e.preventDefault();
+          location.reload();
+          return;
+      }
+
+      // PATH B: Standard PC keyboard
+      switch (e.key) {
+        case 'ArrowLeft':
+        case 'PageUp':
+          e.preventDefault();
+          previousEvent();
+          break;
+        case 'ArrowRight':
+        case 'PageDown':
+          e.preventDefault();
+          nextEvent();
+          break;
+        case 'r':
+        case 'R':
           e.preventDefault();
           location.reload();
           break;
