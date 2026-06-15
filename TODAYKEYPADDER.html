@@ -225,6 +225,18 @@
 </head>
 <body>
 
+  <!--
+    BrightSign focus trap — roHtmlWidget only fires keyboard events into the
+    page when a focusable element has focus. This hidden input holds focus
+    permanently. reFocus() recaptures it if anything else steals it.
+  -->
+  <input id="focusTrap"
+         type="text"
+         style="position:fixed;opacity:0;width:1px;height:1px;top:0;left:0;border:none;outline:none;pointer-events:none;"
+         readonly
+         tabindex="0"
+         aria-hidden="true" />
+
   <div id="loadingSpinner">Loading events…</div>
 
   <div class="event-container" id="eventContainer">
@@ -291,6 +303,19 @@
       btn.title = url ? `Open event page: ${url}` : 'No link available';
     }
 
+    // BrightSign focus management
+    // Keep the hidden input focused at all times so roHtmlWidget delivers key events.
+    const focusTrap = document.getElementById('focusTrap');
+
+    function reFocus() {
+      focusTrap.focus({ preventScroll: true });
+    }
+
+    // Grab focus immediately, and recapture if anything else steals it
+    reFocus();
+    document.addEventListener('click', reFocus);
+    focusTrap.addEventListener('blur', reFocus);
+
     // Keyboard input — two parallel paths in one handler:
     //
     // PATH A — BrightSign XD1034 (e.keycode, non-standard lowercase property)
@@ -305,7 +330,7 @@
     //   r / R               → reload
     document.addEventListener('keydown', function(e) {
       // PATH A: BrightSign numpad keycodes
-      switch (e.keycode) {
+      switch (Number(e.keycode)) {
         case 52:
           e.preventDefault();
           previousEvent();
