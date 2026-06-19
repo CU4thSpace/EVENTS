@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="https://use.typekit.net/paf7uxj.css">
+  <title>Concordia 4th Space Events</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: "gill-sans-nova-condensed", sans-serif;
+      background: #111;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+
+    .container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+      max-width: 700px;
+      padding: 30px 20px;
+      box-sizing: border-box;
+    }
+
+    h1 {
+      color: #FFFFFF;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      font-size: clamp(24px, 4.5vw, 42px);
+      margin: 0 0 24px 0;
+      text-align: center;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 22px;
+      width: 100%;
+      padding: 6px;
+    }
+
+    .nav-button {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      font-family: "gill-sans-nova-condensed", sans-serif;
+      font-weight: 700;
+      font-size: clamp(15px, 2.4vw, 22px);
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      text-align: center;
+      aspect-ratio: 1 / 1;
+      border-radius: 14px;
+      padding: 8px;
+      box-sizing: border-box;
+
+      /* gradient gives each button a curved, glassy sheen regardless of its background color */
+      background-image:
+        linear-gradient(
+          155deg,
+          rgba(255, 255, 255, 0.35) 0%,
+          rgba(255, 255, 255, 0.08) 18%,
+          rgba(255, 255, 255, 0) 35%,
+          rgba(0, 0, 0, 0) 70%,
+          rgba(0, 0, 0, 0.18) 100%
+        );
+
+      /* layered shadow: top highlight rim, bottom dark rim, raised drop shadow, soft ambient */
+      box-shadow:
+        inset 0 2px 1px rgba(255, 255, 255, 0.45),
+        inset 0 -4px 6px rgba(0, 0, 0, 0.35),
+        0 6px 0 rgba(0, 0, 0, 0.35),
+        0 10px 14px rgba(0, 0, 0, 0.45);
+
+      transform: translateY(0);
+      transition: transform 0.1s ease, box-shadow 0.1s ease, filter 0.1s ease;
+    }
+
+    .nav-button:hover {
+      filter: brightness(1.08);
+      transform: translateY(-2px);
+      box-shadow:
+        inset 0 2px 1px rgba(255, 255, 255, 0.5),
+        inset 0 -4px 6px rgba(0, 0, 0, 0.35),
+        0 8px 0 rgba(0, 0, 0, 0.35),
+        0 14px 18px rgba(0, 0, 0, 0.5);
+    }
+
+    .nav-button:active,
+    .nav-button.pressed {
+      transform: translateY(4px);
+      filter: brightness(0.95);
+      box-shadow:
+        inset 0 2px 3px rgba(0, 0, 0, 0.35),
+        inset 0 1px 1px rgba(255, 255, 255, 0.2),
+        0 2px 0 rgba(0, 0, 0, 0.35),
+        0 3px 6px rgba(0, 0, 0, 0.4);
+    }
+
+    .nav-button.focused {
+      outline: 4px solid #FFD600;
+      outline-offset: 3px;
+      transform: translateY(-2px);
+      z-index: 2;
+    }
+
+    .nav-button.focused.pressed,
+    .nav-button.focused:active {
+      transform: translateY(4px);
+    }
+
+    .nav-button.rim-light {
+      box-shadow:
+        inset 0 0 0 1px rgba(255, 255, 255, 0.18),
+        inset 0 2px 1px rgba(255, 255, 255, 0.45),
+        inset 0 -4px 6px rgba(0, 0, 0, 0.35),
+        0 6px 0 rgba(0, 0, 0, 0.35),
+        0 10px 14px rgba(0, 0, 0, 0.45);
+    }
+
+    .nav-button.rim-dark {
+      box-shadow:
+        inset 0 0 0 1px rgba(0, 0, 0, 0.12),
+        inset 0 2px 1px rgba(255, 255, 255, 0.45),
+        inset 0 -4px 6px rgba(0, 0, 0, 0.18),
+        0 6px 0 rgba(0, 0, 0, 0.35),
+        0 10px 14px rgba(0, 0, 0, 0.45);
+    }
+
+    .corner-num {
+      position: absolute;
+      top: 6px;
+      left: 8px;
+      font-size: clamp(11px, 1.8vw, 15px);
+      font-weight: 700;
+      opacity: 0.8;
+      line-height: 1;
+    }
+
+    .label {
+      pointer-events: none;
+    }
+
+    #focusTrap {
+      position: absolute;
+      top: -100px;
+      left: -100px;
+      width: 1px;
+      height: 1px;
+      opacity: 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Concordia 4th Space Events</h1>
+    <div class="grid" id="grid"></div>
+  </div>
+
+  <input id="focusTrap" type="text" autocomplete="off" />
+
+  <script>
+    // Title / URL pairs (1-9, numpad style)
+    const links = [
+      { title: "TODAY",      url: "https://cu4thspace.github.io/EVENTS/OBSCLOCKDATE" },
+      { title: "CLIPBOARD",  url: "https://docs.google.com/document/d/1oxL6SxPDU_-8RBKRX9O3CZYOGgsAQcRkpuWeD0heMo0/edit" },
+      { title: "4thSpace",   url: "https://www.concordia.ca/next-gen/4th-space.html" },
+      { title: "YT 4SP",     url: "https://www.youtube.com/CU4thSpace" },
+      { title: "LIVE",       url: "https://studio.youtube.com/channel/UCEOJMoIqrd5vJDPIWZz7s_Q/livestreaming/dashboard" },
+      { title: "AEM",        url: "https://cms-prod-a6-auth1.concordia.ca:5433/siteadmin#/content/shared/en/events/offices/provost/fourth-space" },
+      { title: "INSTA",      url: "https://www.instagram.com/cu4thspace/" },
+      { title: "ONEDRIVE",   url: "https://liveconcordia-my.sharepoint.com/?login_hint=info%2E4%40concordia%2Eca&source=waffle" },
+      { title: "LOWERTHIRDS",url: "https://cu4thspace.github.io/LOWERTHIRDS/L3byCSV.html" }
+    ];
+
+    // Alternating color palette
+    const colors = [
+      "#90012F", "#2E3092", "#ED2A7B", "#EF4036", "#00ADEF",
+      "#FFD600", "#00A79D", "#000000", "#FFFFFF"
+    ];
+
+    function textColorFor(hex) {
+      const lightBackgrounds = ["#FFD600", "#FFFFFF"];
+      return lightBackgrounds.includes(hex.toUpperCase()) ? "#111111" : "#FFFFFF";
+    }
+
+    const grid = document.getElementById("grid");
+    const buttons = [];
+
+    links.forEach((link, i) => {
+      const num = i + 1; // 1-9
+      const bg = colors[i % colors.length];
+
+      const a = document.createElement("a");
+      a.className = "nav-button";
+      a.href = link.url;
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+      a.dataset.index = i;
+      a.style.backgroundColor = bg;
+      a.style.color = textColorFor(bg);
+      if (bg === "#000000") a.classList.add("rim-light");
+      if (bg === "#FFFFFF") a.classList.add("rim-dark");
+
+      const corner = document.createElement("span");
+      corner.className = "corner-num";
+      corner.textContent = num;
+      corner.style.color = textColorFor(bg);
+
+      const label = document.createElement("span");
+      label.className = "label";
+      label.textContent = link.title;
+
+      a.appendChild(corner);
+      a.appendChild(label);
+      grid.appendChild(a);
+      buttons.push(a);
+    });
+
+    // --- Keyboard / keypad navigation ---
+    const focusTrap = document.getElementById("focusTrap");
+
+    function reFocus() {
+      focusTrap.focus();
+    }
+    focusTrap.addEventListener("blur", () => {
+      setTimeout(reFocus, 0);
+    });
+    reFocus();
+
+    let currentIndex = -1;
+
+    function setFocused(idx) {
+      buttons.forEach(b => b.classList.remove("focused"));
+      if (idx >= 0 && idx < buttons.length) {
+        currentIndex = idx;
+        buttons[idx].classList.add("focused");
+      }
+    }
+
+    function pressAndGo(idx) {
+      const btn = buttons[idx];
+      if (!btn) return;
+      btn.classList.add("pressed");
+      setTimeout(() => btn.classList.remove("pressed"), 120);
+      window.open(btn.href, "_blank", "noopener,noreferrer");
+    }
+
+    document.addEventListener("keydown", (e) => {
+      // BrightSign sends e.keyCode as a lowercase, string-typed property in some firmwares.
+      // Coerce defensively so this also works correctly on BrightSign hardware.
+      const code = Number(e.keyCode !== undefined ? e.keyCode : e.which);
+
+      // Numpad / number row 1-9 -> keyCode 49-57, numpad 97-105
+      let numPressed = null;
+      if (code >= 49 && code <= 57) numPressed = code - 48;       // "1".."9"
+      if (code >= 97 && code <= 105) numPressed = code - 96;      // numpad 1-9
+
+      if (numPressed !== null) {
+        const idx = numPressed - 1;
+        if (idx >= 0 && idx < buttons.length) {
+          setFocused(idx);
+          pressAndGo(idx);
+        }
+        e.preventDefault();
+        return;
+      }
+
+      // Arrow key navigation across the 3x3 grid
+      const cols = 3;
+      let next = currentIndex;
+
+      switch (code) {
+        case 37: // left
+          next = currentIndex <= 0 ? buttons.length - 1 : currentIndex - 1;
+          break;
+        case 39: // right
+          next = currentIndex >= buttons.length - 1 ? 0 : currentIndex + 1;
+          break;
+        case 38: // up
+          next = currentIndex - cols;
+          if (next < 0) next += buttons.length;
+          break;
+        case 40: // down
+          next = currentIndex + cols;
+          if (next >= buttons.length) next -= buttons.length;
+          break;
+        case 13: // enter
+          if (currentIndex >= 0) pressAndGo(currentIndex);
+          e.preventDefault();
+          return;
+        default:
+          return;
+      }
+
+      setFocused(next);
+      e.preventDefault();
+    });
+
+    // Mouse hover also updates focus state for visual consistency
+    buttons.forEach((btn, idx) => {
+      btn.addEventListener("mouseenter", () => setFocused(idx));
+      btn.addEventListener("click", () => pressAndGo(idx));
+    });
+  </script>
+</body>
+</html>
