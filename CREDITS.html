@@ -3,59 +3,213 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>4TH SPACE — Event Credits Feed (live)</title>
+<title>4TH SPACE — Event Credits Feed</title>
+<link rel="stylesheet" href="https://use.typekit.net/paf7uxj.css">
 <style>
   :root{
-    --burgundy:#912338; --burgundy-dark:#6c1a2a; --ink:#211a1c;
-    --paper:#faf7f3; --line:#e3d9d2; --muted:#8a7b74; --gold:#b78a3c;
+    --bg:#111;
+    --card:#1a1a1a;
+    --line:#333;
+    --ink:#ccc;
+    --ink-dim:#888;
+    --white:#fff;
   }
   *{box-sizing:border-box;}
-  body{margin:0;background:var(--paper);color:var(--ink);font-family:"Iowan Old Style","Georgia",serif;line-height:1.5;}
-  header{background:var(--burgundy);color:#fff;padding:2.5rem 1.5rem 2rem;border-bottom:6px solid var(--gold);}
-  header .kicker{font-family:"Helvetica Neue",Arial,sans-serif;text-transform:uppercase;letter-spacing:.16em;font-size:.72rem;opacity:.85;margin:0 0 .4rem;}
-  header h1{margin:0;font-size:2rem;font-weight:600;}
-  header p.sub{font-family:"Helvetica Neue",Arial,sans-serif;font-size:.85rem;opacity:.85;max-width:640px;margin:.6rem 0 0;}
-  main{max-width:860px;margin:0 auto;padding:2.5rem 1.5rem 4rem;}
-  .toolbar{display:flex;gap:.6rem;flex-wrap:wrap;margin-bottom:2rem;font-family:"Helvetica Neue",Arial,sans-serif;}
-  .toolbar input{flex:1;min-width:200px;padding:.6rem .8rem;border:1px solid var(--line);border-radius:3px;font-size:.9rem;background:#fff;}
-  .count{font-family:"Helvetica Neue",Arial,sans-serif;font-size:.78rem;color:var(--muted);align-self:center;white-space:nowrap;}
-  .event{background:#fff;border:1px solid var(--line);border-left:4px solid var(--burgundy);border-radius:2px;padding:1.4rem 1.6rem;margin-bottom:1.1rem;}
-  .event.no-credits{border-left-color:var(--line);opacity:.72;}
-  .event-title{font-size:1.28rem;margin:0 0 .1rem;font-weight:600;}
-  .event-title a{color:var(--ink);text-decoration:none;}
-  .event-title a:hover{color:var(--burgundy);text-decoration:underline;}
-  .event-date{font-family:"Helvetica Neue",Arial,sans-serif;font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:.9rem;}
-  .credit-block{margin-top:.7rem;padding-top:.7rem;border-top:1px dotted var(--line);}
-  .credit-label{font-family:"Helvetica Neue",Arial,sans-serif;font-size:.68rem;text-transform:uppercase;letter-spacing:.1em;color:var(--burgundy);font-weight:700;margin:0 0 .25rem;}
-  .credit-value{margin:0 0 .6rem;font-size:.96rem;}
-  .credit-value a{color:var(--burgundy-dark);}
-  ul.speaker-list{margin:.2rem 0 .6rem;padding-left:1.1rem;columns:2;-webkit-columns:2;font-size:.92rem;}
-  ul.speaker-list li{break-inside:avoid;margin-bottom:.15rem;}
-  .empty-note{font-family:"Helvetica Neue",Arial,sans-serif;font-size:.85rem;color:var(--muted);font-style:italic;margin:0;}
-  footer{text-align:center;font-family:"Helvetica Neue",Arial,sans-serif;font-size:.72rem;color:var(--muted);padding:2rem 1.5rem 3rem;}
-  .status{font-family:"Helvetica Neue",Arial,sans-serif;font-size:.9rem;color:var(--muted);padding:1rem 0;}
-  .error-box{
-    background:#fff3f2;border:1px solid #e2b3ae;border-left:4px solid var(--burgundy);
-    padding:1.2rem 1.4rem;margin-bottom:1.5rem;font-family:"Helvetica Neue",Arial,sans-serif;
-    font-size:.88rem;color:#5a1414;border-radius:2px;
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:"gill-sans-nova-condensed", sans-serif;
   }
-  .error-box strong{display:block;margin-bottom:.4rem;font-size:.95rem;}
-  .error-box code{background:#fff;padding:.1rem .35rem;border-radius:2px;border:1px solid #e2b3ae;}
+  header{
+    padding:3rem 1.5rem 2rem;
+    border-bottom:1px solid var(--line);
+  }
+  header .kicker{
+    text-transform:uppercase;
+    letter-spacing:.3em;
+    font-size:.85rem;
+    color:var(--ink-dim);
+    margin:0 0 .5rem;
+    font-weight:700;
+  }
+  header h1{
+    margin:0;
+    font-size:clamp(2.6rem, 7vw, 5rem);
+    font-weight:700;
+    line-height:0.9;
+    color:var(--ink);
+    opacity:.95;
+    text-transform:uppercase;
+  }
+  header p.sub{
+    font-size:1.15rem;
+    color:var(--ink-dim);
+    max-width:640px;
+    margin:1rem 0 0;
+    line-height:1.3;
+  }
+  main{
+    max-width:1100px;
+    margin:0 auto;
+    padding:2rem 1.5rem 4rem;
+  }
+  .toolbar{
+    display:flex;
+    gap:.6rem;
+    flex-wrap:wrap;
+    margin-bottom:2rem;
+  }
+  .toolbar input{
+    flex:1;
+    min-width:200px;
+    padding:.8rem 1rem;
+    border:1px solid var(--line);
+    background:var(--card);
+    color:var(--ink);
+    font-family:inherit;
+    font-size:1.1rem;
+    border-radius:2px;
+  }
+  .toolbar input::placeholder{ color:var(--ink-dim); }
+  .count{
+    font-size:.85rem;
+    color:var(--ink-dim);
+    align-self:center;
+    white-space:nowrap;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+  }
+  .grid{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:1.6rem;
+  }
+  .event{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:3px;
+    overflow:hidden;
+  }
+  .event-banner{
+    position:relative;
+    width:100%;
+    aspect-ratio:16/8;
+    background-size:cover;
+    background-position:center;
+    background-color:#050505;
+    display:flex;
+    align-items:flex-end;
+  }
+  .event-banner::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    background:linear-gradient(to top, rgba(0,0,0,.88) 0%, rgba(0,0,0,.55) 40%, rgba(0,0,0,.15) 75%, rgba(0,0,0,0) 100%);
+  }
+  .event.no-image .event-banner{
+    background-color:#050505;
+    aspect-ratio:16/4;
+  }
+  .banner-text{
+    position:relative;
+    z-index:1;
+    padding:1.4rem 1.6rem 1.2rem;
+    width:100%;
+  }
+  .event-title{
+    margin:0;
+    font-size:clamp(1.7rem, 4vw, 3.2rem);
+    font-weight:700;
+    line-height:0.92;
+    color:var(--ink);
+    opacity:.95;
+    text-transform:uppercase;
+  }
+  .event-title a{
+    color:inherit;
+    text-decoration:none;
+  }
+  .event-title a:hover{ color:var(--white); }
+  .event-date{
+    font-size:1.05rem;
+    color:var(--ink-dim);
+    margin:.3rem 0 0;
+    letter-spacing:.03em;
+  }
+  .credit-block{
+    padding:1.3rem 1.6rem 1.5rem;
+  }
+  .credit-label{
+    font-size:.85rem;
+    text-transform:uppercase;
+    letter-spacing:.2em;
+    color:var(--ink-dim);
+    font-weight:700;
+    margin:0 0 .3rem;
+  }
+  .credit-value{
+    margin:0 0 .9rem;
+    font-size:1.15rem;
+    color:var(--ink);
+    line-height:1.25;
+  }
+  .credit-value a{ color:var(--white); text-decoration:underline; }
+  ul.speaker-list{
+    margin:.2rem 0 .9rem;
+    padding-left:1.2rem;
+    columns:2;
+    -webkit-columns:2;
+    font-size:1.1rem;
+    color:var(--ink);
+  }
+  ul.speaker-list li{ break-inside:avoid; margin-bottom:.2rem; }
+  .empty-note{
+    font-size:1.05rem;
+    color:var(--ink-dim);
+    font-style:italic;
+    margin:0;
+  }
+  footer{
+    text-align:center;
+    font-size:.8rem;
+    color:var(--ink-dim);
+    padding:2rem 1.5rem 3rem;
+    border-top:1px solid var(--line);
+  }
+  .status{ font-size:1.1rem; color:var(--ink-dim); padding:1rem 0; }
+  .error-box{
+    background:#241010;
+    border:1px solid #5a2a2a;
+    border-left:4px solid #b23a3a;
+    padding:1.2rem 1.4rem;
+    margin-bottom:1.5rem;
+    font-size:1rem;
+    color:#f2c9c9;
+    border-radius:2px;
+  }
+  .error-box strong{ display:block; margin-bottom:.4rem; font-size:1.1rem; }
+  .error-box code{ background:#000; padding:.1rem .35rem; border-radius:2px; }
   .spinner{
     display:inline-block;width:14px;height:14px;border:2px solid var(--line);
-    border-top-color:var(--burgundy);border-radius:50%;animation:spin 0.8s linear infinite;
+    border-top-color:var(--ink);border-radius:50%;animation:spin 0.8s linear infinite;
     margin-right:.5rem;vertical-align:middle;
   }
   @keyframes spin{to{transform:rotate(360deg);}}
-  @media (max-width:520px){ul.speaker-list{columns:1;}header h1{font-size:1.5rem;}}
+  @media (min-width:760px){
+    .grid{ grid-template-columns:1fr 1fr; }
+  }
+  @media (max-width:520px){
+    ul.speaker-list{ columns:1; }
+  }
 </style>
 </head>
 <body>
 
 <header>
   <p class="kicker">4TH SPACE · Concordia University</p>
-  <h1>Event Credits Feed <span style="font-size:.6em;opacity:.7;">(live)</span></h1>
-  <p class="sub">Fetches the RSS calendar and each event page directly in your browser, then pulls out organizer/speaker credits that aren't in the public feed.</p>
+  <h1>Event Credits Feed</h1>
+  <p class="sub">Organizers, participants, and speakers pulled from each event's page — fetched live, not part of the public RSS feed.</p>
 </header>
 
 <main>
@@ -65,16 +219,16 @@
   </div>
 
   <div id="status" class="status"><span class="spinner"></span> Fetching RSS feed…</div>
-  <div id="eventList"></div>
+  <div id="eventList" class="grid"></div>
 </main>
 
 <footer>
-  Fetched live from concordia.ca on page load. If nothing loads above, see the error message for why.
+  Fetched live from concordia.ca on page load.
 </footer>
 
 <script>
 const RSS_URL = "https://www.concordia.ca/content/concordia/en/next-gen/4th-space/programming/RSSCAL/_jcr_content/content-main/grid_container_671899525/grid-container-parsys/events_list.xml";
-const CONCURRENCY = 4; // how many event pages to fetch at once
+const CONCURRENCY = 4;
 
 function showError(title, detail){
   const status = document.getElementById('status');
@@ -114,16 +268,26 @@ function formatDate(pubDate){
   return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
 }
 
-/* Extracts credits from a fetched event page's HTML, mirroring the same
-   three patterns handled by the server-side Python scraper. */
-function extractCredits(pageHtml){
+function extractThumbnail(doc, pageUrl){
+  const og = doc.querySelector('meta[property="og:image"]');
+  if(og && og.content){
+    try { return new URL(og.content, pageUrl).href; } catch(e){ return og.content; }
+  }
+  const mainImg = doc.querySelector('#parsys_main_image img, .c-image img');
+  if(mainImg && mainImg.getAttribute('src')){
+    try { return new URL(mainImg.getAttribute('src'), pageUrl).href; } catch(e){ return null; }
+  }
+  return null;
+}
+
+/* Same three credit patterns as before: accordion, italic line, Speakers heading. */
+function extractCredits(pageHtml, pageUrl){
   const doc = new DOMParser().parseFromString(pageHtml, 'text/html');
   const result = {
     organizedBy: null, withSupport: null, participants: [], speakers: [],
-    description: null, hasCredits: false
+    description: null, hasCredits: false, thumbnail: extractThumbnail(doc, pageUrl)
   };
 
-  // Pattern 1: accordion "CREDITS" panel
   let accordionBody = null;
   doc.querySelectorAll('.accordion-header').forEach(header => {
     if(accordionBody) return;
@@ -177,7 +341,6 @@ function extractCredits(pageHtml){
     }
   }
 
-  // Pattern 2: italic "Organized by ..." / "With ..." lines
   if(!result.organizedBy){
     doc.querySelectorAll('h5, h6, p').forEach(tag => {
       const txt = cleanText(tag.textContent);
@@ -191,7 +354,6 @@ function extractCredits(pageHtml){
     });
   }
 
-  // Pattern 3: "Speakers" / "Speaker" heading followed by name subheadings
   doc.querySelectorAll('h2, h3').forEach(heading => {
     const htxt = cleanText(heading.textContent).toLowerCase();
     if(['speakers','speaker','panelists','panellists'].includes(htxt)){
@@ -214,13 +376,20 @@ function extractCredits(pageHtml){
 function renderEvent(item, credits){
   const article = document.createElement('article');
   article.className = credits.hasCredits ? 'event' : 'event no-credits';
+  if(!credits.thumbnail) article.classList.add('no-image');
   const searchBlob = [item.title, credits.organizedBy || '', ...(credits.speakers||[]), ...(credits.participants||[])]
     .join(' ').replace(/<[^>]+>/g, ' ').toLowerCase();
   article.setAttribute('data-search', searchBlob);
 
+  const bannerStyle = credits.thumbnail ? `style="background-image:url('${credits.thumbnail}')"` : '';
+
   let inner = `
-    <h2 class="event-title"><a href="${item.link}" target="_blank" rel="noopener">${item.title}</a></h2>
-    <p class="event-date">${formatDate(item.pubDate)}</p>
+    <div class="event-banner" ${bannerStyle}>
+      <div class="banner-text">
+        <h2 class="event-title"><a href="${item.link}" target="_blank" rel="noopener">${item.title}</a></h2>
+        <p class="event-date">${formatDate(item.pubDate)}</p>
+      </div>
+    </div>
     <div class="credit-block">
   `;
   if(!credits.hasCredits){
@@ -278,9 +447,8 @@ async function main(){
   } catch(err){
     showError(
       'Could not load the RSS feed from the browser.',
-      `<p>concordia.ca likely isn't sending CORS headers that allow this page's origin to read the response — that's enforced by their server, not something fixable from this page.</p>
-       <p>Error detail: <code>${err.message}</code></p>
-       <p>The reliable fix is running the fetch server-side (e.g. a scheduled GitHub Action) instead of in-browser — happy to set that up if you want to switch back to it.</p>`
+      `<p>concordia.ca likely isn't sending CORS headers that allow this page's origin to read the response.</p>
+       <p>Error detail: <code>${err.message}</code></p>`
     );
     return;
   }
@@ -291,16 +459,20 @@ async function main(){
   const rendered = await mapWithConcurrency(feedItems, CONCURRENCY, async (item) => {
     try {
       const pageHtml = await fetchText(item.link);
-      const credits = extractCredits(pageHtml);
+      const credits = extractCredits(pageHtml, item.link);
       return renderEvent(item, credits);
     } catch(err){
       failCount++;
       const article = document.createElement('article');
-      article.className = 'event no-credits';
+      article.className = 'event no-credits no-image';
       article.setAttribute('data-search', item.title.toLowerCase());
       article.innerHTML = `
-        <h2 class="event-title"><a href="${item.link}" target="_blank" rel="noopener">${item.title}</a></h2>
-        <p class="event-date">${formatDate(item.pubDate)}</p>
+        <div class="event-banner">
+          <div class="banner-text">
+            <h2 class="event-title"><a href="${item.link}" target="_blank" rel="noopener">${item.title}</a></h2>
+            <p class="event-date">${formatDate(item.pubDate)}</p>
+          </div>
+        </div>
         <div class="credit-block"><p class="empty-note">Couldn't fetch this event page (${err.message}).</p></div>
       `;
       return article;
@@ -312,8 +484,7 @@ async function main(){
   if(failCount === feedItems.length){
     showError(
       'RSS loaded, but every individual event page failed to fetch.',
-      `<p>This is the CORS pattern you'd expect if concordia.ca allows the RSS/XML endpoint to be read cross-origin but not the regular HTML event pages (a common asymmetry — feeds are sometimes opened up, full pages usually aren't).</p>
-       <p>If so, a client-side-only version can't get past this; it needs a server-side fetch (scheduled GitHub Action) to pull the HTML pages instead.</p>`
+      `<p>This is the CORS pattern you'd expect if concordia.ca allows the RSS/XML endpoint to be read cross-origin but not the regular HTML event pages.</p>`
     );
   } else {
     status.remove();
