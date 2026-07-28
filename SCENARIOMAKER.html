@@ -52,7 +52,7 @@
     letter-spacing: normal;
     margin-left: 6px;
   }
-  input[type="text"], textarea {
+  input[type="text"], input[type="date"], textarea, select {
     width: 100%;
     background: var(--panel);
     border: 1px solid var(--border);
@@ -119,89 +119,159 @@
 <body>
 <div class="wrap">
   <h1>Event Scenario Formatter</h1>
-  <div class="sub">Fill in the fields — the formatted version updates live at the bottom for copy/paste into notes.</div>
+  <div class="sub">Fill in the fields — the formatted version updates live at the bottom for copy/paste into notes. Your entries are saved automatically in this browser.</div>
+  <div class="btnrow" style="margin-bottom:20px;">
+    <button class="secondary" onclick="clearAll()">Clear All</button>
+  </div>
 
   <div class="section-title">Scenario</div>
   <div class="grid">
     <div class="field">
-      <label>Day / Date</label>
-      <input type="text" id="date" placeholder="Thursday, July 30, 2026">
+      <label>Date</label>
+      <input type="date" id="date">
     </div>
     <div class="field">
       <label>Time</label>
-      <input type="text" id="time" placeholder="10am - 6pm">
+      <input type="text" id="time" placeholder="?">
     </div>
     <div class="field">
       <label>Format</label>
-      <input type="text" id="format" placeholder="Workshop">
+      <select id="format">
+        <option value="" selected>-- Select --</option>
+        <option>TBD</option>
+        <option>POSTER</option>
+        <option>POPCORN</option>
+        <option>HOLIDAY</option>
+        <option>TABLING</option>
+        <option>POPUP EXPO</option>
+        <option>OPEN STUDIO</option>
+        <option>PANEL</option>
+        <option>PODCAST</option>
+        <option>STATIONS</option>
+        <option>COOKING SHOW</option>
+        <option>PRODUCTION</option>
+        <option>WORKSHOP</option>
+        <option>PERFORMANCE</option>
+        <option>SCREENING</option>
+        <option>INSTALLATION</option>
+        <option>RESIDENCY</option>
+        <option>UNBOXING</option>
+      </select>
     </div>
     <div class="field">
       <label>Layout</label>
-      <input type="text" id="layout" placeholder="Podcast Zone @ Main. 5 Quick Tables...">
+      <select id="layout">
+        <option value="" selected>-- Select --</option>
+        <option>TBD</option>
+        <option>BREAKOUT TABLES</option>
+        <option>UNBOXING</option>
+        <option>SCREENING</option>
+        <option>LIVEWALK</option>
+        <option>CIRCULAR</option>
+        <option>PODCAST</option>
+        <option>POP UP EXPO</option>
+        <option>CABARET</option>
+        <option>POSTERING</option>
+        <option>A LA MAXINE</option>
+        <option>STREETSIDE</option>
+        <option>COOKING</option>
+        <option>WORKSHOP (SOUTH)</option>
+        <option>HYBRID LED</option>
+        <option>MAIN TABLE W/ PODIUM</option>
+        <option>PRODUCTION</option>
+        <option>WORKSHOP (NORTH)</option>
+        <option>CASUAL CONVERSATION</option>
+        <option>PODIUM</option>
+        <option>SPECIAL</option>
+      </select>
     </div>
     <div class="field">
       <label>Cameras</label>
-      <input type="text" id="cameras" placeholder="group may use our gear...">
+      <input type="text" id="cameras" placeholder="?">
     </div>
     <div class="field">
       <label>Mics</label>
-      <input type="text" id="mics" placeholder="probably not needed...">
+      <input type="text" id="mics" placeholder="?">
     </div>
     <div class="field">
       <label>Lower Thirds</label>
-      <input type="text" id="lowerThirds" placeholder="N/A">
+      <select id="lowerThirds">
+        <option value="" selected>-- Select --</option>
+        <option>Yes</option>
+        <option>No</option>
+      </select>
     </div>
     <div class="field">
       <label>Catering</label>
-      <input type="text" id="catering" placeholder="maybe">
+      <select id="catering">
+        <option value="" selected>-- Select --</option>
+        <option>Yes</option>
+        <option>No</option>
+      </select>
     </div>
     <div class="field">
       <label>Dish Project</label>
-      <input type="text" id="dishProject" placeholder="YES / NO">
+      <select id="dishProject">
+        <option value="" selected>-- Select --</option>
+        <option>Yes</option>
+        <option>No</option>
+      </select>
     </div>
   </div>
 
-  <div class="section-title">Notes (one item per line — bullets added automatically)</div>
+  <div class="section-title">Notes</div>
   <div class="field full">
-    <label>Notes <span class="hint">e.g. Organizer, Moderator, Panelists, PPTs</span></label>
-    <textarea id="notes" placeholder="Organizer: David Secko, Cristina Sanza, Projected Futures
-Moderator / Facilitator: Dave
-Panelists / Presenters: n/a
-PPTs / Visuals: no"></textarea>
+    <label>Organizer</label>
+    <input type="text" id="organizer" placeholder="?">
+  </div>
+  <div class="field full">
+    <label>Moderator / Facilitator</label>
+    <input type="text" id="moderator" placeholder="?">
+  </div>
+  <div class="field full">
+    <label>Panelists / Presenters</label>
+    <input type="text" id="panelists" placeholder="?">
+  </div>
+  <div class="field full">
+    <label>PPTs / Visuals</label>
+    <input type="text" id="ppts" placeholder="?">
   </div>
 
   <div class="section-title">Order of Operations</div>
   <div class="grid">
     <div class="field full">
-      <label>Header line <span class="hint">e.g. IN PERSON ONLY Event 9-6</span></label>
-      <input type="text" id="oooHeader" placeholder="IN PERSON ONLY Event 9 -6">
-    </div>
-    <div class="field full">
       <label>Steps <span class="hint">one per line — bullets added automatically</span></label>
-      <textarea id="oooSteps" placeholder="4SP Intro, handoff to Dave
-Open Workshop"></textarea>
+      <textarea id="oooSteps" placeholder="?"></textarea>
     </div>
   </div>
 
   <div class="section-title">Meeting Notes (one item per line — bullets added automatically)</div>
   <div class="field full">
-    <textarea id="meetingNotes" placeholder="Talk to Dave about Voltage collab...
-@Douglas Moffat check in on this in January..."></textarea>
+    <textarea id="meetingNotes" placeholder="?"></textarea>
   </div>
 
   <div class="output-box">
     <div class="section-title" style="margin-top:0;">Formatted Output</div>
     <textarea id="output" readonly></textarea>
-    <div class="btnrow">
+    <div class="btnrow" style="flex-wrap:wrap;">
       <button onclick="copyOutput()">Copy to Clipboard</button>
       <button class="secondary" onclick="clearAll()">Clear All</button>
+      <input type="text" id="emailTo" placeholder="recipient@email.com (optional)" style="max-width:220px;">
+      <button onclick="emailOutput()">Email Notes</button>
       <span id="copyStatus"></span>
     </div>
   </div>
 </div>
 
 <script>
-const ids = ['date','time','format','layout','cameras','mics','lowerThirds','catering','dishProject','notes','oooHeader','oooSteps','meetingNotes'];
+const ids = ['date','time','format','layout','cameras','mics','lowerThirds','catering','dishProject','organizer','moderator','panelists','ppts','oooSteps','meetingNotes'];
+
+function formatDate(isoDate) {
+  if (!isoDate) return '';
+  const [y, m, d] = isoDate.split('-').map(Number);
+  const dt = new Date(y, m - 1, d);
+  return dt.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+}
 
 function bulletize(text) {
   return text
@@ -216,13 +286,19 @@ function buildOutput() {
   const v = {};
   ids.forEach(id => v[id] = document.getElementById(id).value);
 
-  const notesBlock = bulletize(v.notes);
+  const notesLines = [
+    `Organizer: ${v.organizer}`,
+    `Moderator / Facilitator: ${v.moderator}`,
+    `Panelists / Presenters: ${v.panelists}`,
+    `PPTs / Visuals: ${v.ppts}`
+  ].join('\n');
+  const notesBlock = bulletize(notesLines);
   const oooStepsBlock = bulletize(v.oooSteps);
   const meetingNotesBlock = bulletize(v.meetingNotes);
 
   const out =
 `SCENARIO
-${v.date}
+${formatDate(v.date)}
 ${v.time}
 FORMAT: ${v.format}
 LAYOUT: ${v.layout}
@@ -236,7 +312,6 @@ NOTES:
 ${notesBlock}
 
 ORDER OF OPERATIONS
-${v.oooHeader}
 
 ${oooStepsBlock}
 
@@ -249,8 +324,32 @@ ${meetingNotesBlock}`;
   document.getElementById('output').value = out;
 }
 
+const STORAGE_KEY = 'eventScenarioDraft';
+
+function saveDraft() {
+  const draft = {};
+  ids.forEach(id => draft[id] = document.getElementById(id).value);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(draft));
+}
+
+function loadDraft() {
+  const saved = localStorage.getItem(STORAGE_KEY);
+  if (!saved) return;
+  try {
+    const draft = JSON.parse(saved);
+    ids.forEach(id => {
+      if (draft[id] !== undefined) document.getElementById(id).value = draft[id];
+    });
+  } catch (e) {
+    console.error('Could not load saved draft', e);
+  }
+}
+
 ids.forEach(id => {
   document.getElementById(id).addEventListener('input', buildOutput);
+  document.getElementById(id).addEventListener('change', buildOutput);
+  document.getElementById(id).addEventListener('input', saveDraft);
+  document.getElementById(id).addEventListener('change', saveDraft);
 });
 
 function copyOutput() {
@@ -262,11 +361,21 @@ function copyOutput() {
   setTimeout(() => status.textContent = '', 1500);
 }
 
+function emailOutput() {
+  const to = document.getElementById('emailTo').value.trim();
+  const subject = `Event Scenario: ${document.getElementById('format').value || 'Untitled'} - ${formatDate(document.getElementById('date').value) || ''}`;
+  const body = document.getElementById('output').value;
+  const mailto = `mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+  window.location.href = mailto;
+}
+
 function clearAll() {
   ids.forEach(id => document.getElementById(id).value = '');
+  localStorage.removeItem(STORAGE_KEY);
   buildOutput();
 }
 
+loadDraft();
 buildOutput();
 </script>
 </body>
