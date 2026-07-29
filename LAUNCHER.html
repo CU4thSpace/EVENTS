@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Special+Elite&display=swap" rel="stylesheet">
-  <title>4th Space LAUNCHER</title>
+  <title>4thSpace Launcher</title>
   <style>
     body {
       margin: 0;
@@ -119,17 +119,19 @@
       box-sizing: border-box;
       color: #f2f2ef;
 
-      /* dark keycap body with a soft dome highlight, like the molded plastic keys */
+      /* dark keycap body with a centered concave highlight, plus a faded color wash tinted per-button */
       background-image:
-        radial-gradient(ellipse at 32% 22%, rgba(255,255,255,0.28) 0%, rgba(255,255,255,0.06) 30%, rgba(255,255,255,0) 55%),
+        radial-gradient(ellipse at 50% 50%, rgba(255,255,255,0.22) 0%, rgba(255,255,255,0.08) 35%, rgba(255,255,255,0) 65%),
+        linear-gradient(180deg, var(--tint, transparent), var(--tint, transparent)),
         linear-gradient(180deg, #3a3a3a 0%, #2b2b2b 55%, #202020 100%);
 
-      /* raised keycap shadow: bright top bevel, dark bottom bevel, drop shadow onto faceplate */
+      /* concave bevel: dark rim at top, bright rim at bottom, plus a bright molded-edge frame */
       box-shadow:
-        inset 0 1px 0 rgba(255,255,255,0.35),
-        inset 0 -3px 3px rgba(0,0,0,0.55),
-        0 4px 0 rgba(0,0,0,0.45),
-        0 7px 10px rgba(0,0,0,0.45);
+        inset 0 0 0 1px rgba(255,255,255,0.30),
+        inset 0 -2px 3px rgba(255,255,255,0.25),
+        inset 0 3px 5px rgba(0,0,0,0.55),
+        0 9px 0 rgba(0,0,0,0.5),
+        0 18px 22px rgba(0,0,0,0.55);
 
       transform: translateY(0);
       transition: transform 0.08s ease, box-shadow 0.08s ease, filter 0.08s ease;
@@ -142,13 +144,14 @@
 
     .nav-button:active,
     .nav-button.pressed {
-      transform: translateY(3px);
+      transform: translateY(7px);
       filter: brightness(0.9);
       box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.22),
         inset 0 2px 4px rgba(0,0,0,0.6),
         inset 0 -1px 0 rgba(255,255,255,0.1),
-        0 1px 0 rgba(0,0,0,0.4),
-        0 2px 4px rgba(0,0,0,0.4);
+        0 2px 0 rgba(0,0,0,0.4),
+        0 4px 6px rgba(0,0,0,0.4);
     }
 
     .nav-button.focused {
@@ -160,7 +163,7 @@
 
     .nav-button.focused.pressed,
     .nav-button.focused:active {
-      transform: translateY(3px);
+      transform: translateY(7px);
     }
 
     /* the light-colored keys (white/yellow originals) get a darker text + lighter dome */
@@ -197,10 +200,10 @@
 </head>
 <body>
   <div class="container">
-    <h1>TODAY SOMETHING HAPPENS</h1>
+    <h1>4thSpace Launcher</h1>
     <div class="faceplate">
       <div class="grid" id="grid"></div>
-      <div class="nameplate"><span>TODAY SOMETHING HAPPENS</span></div>
+      <div class="nameplate"><span>Today Something Happens</span></div>
     </div>
   </div>
 
@@ -220,6 +223,20 @@
       { title: "LOWER THIRDS",url: "https://docs.google.com/spreadsheets/d/16c9DD4OHy1SITcF7lJtH7e49ol6SxN9A_8kBAdCOzsQ/edit?gid=0#gid=0" }
     ];
 
+    // Brand color cycle - applied as a faded tint under the dark keycap gradient
+    const colors = [
+      "#90012F", "#2E3092", "#ED2A7B", "#EF4036", "#00ADEF",
+      "#FFD600", "#00A79D", "#000000", "#FFFFFF"
+    ];
+
+    function hexToRgba(hex, alpha) {
+      const h = hex.replace("#", "");
+      const r = parseInt(h.substring(0, 2), 16);
+      const g = parseInt(h.substring(2, 4), 16);
+      const b = parseInt(h.substring(4, 6), 16);
+      return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    }
+
     // All keys are dark by default, like the vintage phone's keycaps.
     // List indices here that should render as "light" keys instead (rare accents).
     const lightKeyIndices = [];
@@ -230,6 +247,7 @@
     links.forEach((link, i) => {
       const num = i + 1; // 1-9
       const isLight = lightKeyIndices.includes(i);
+      const tint = colors[i % colors.length];
 
       const a = document.createElement("a");
       a.className = "nav-button" + (isLight ? " key-light" : "");
@@ -237,6 +255,7 @@
       a.target = "_blank";
       a.rel = "noopener noreferrer";
       a.dataset.index = i;
+      a.style.setProperty("--tint", hexToRgba(tint, 0.32));
 
       const corner = document.createElement("span");
       corner.className = "corner-num";
