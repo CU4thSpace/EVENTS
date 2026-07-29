@@ -124,12 +124,18 @@
     <button class="secondary" onclick="clearAll()">Clear All</button>
   </div>
 
+  <div class="section-title" style="margin-top:0;">Event Notes Title</div>
+  <div class="field">
+    <label>Working Title</label>
+    <input type="text" id="workingTitle" placeholder="?">
+  </div>
+  <div class="field">
+    <label>Date <span class="hint">used as the title for these Event Notes</span></label>
+    <input type="date" id="eventDate">
+  </div>
+
   <div class="section-title">Scenario</div>
   <div class="grid">
-    <div class="field">
-      <label>Date</label>
-      <input type="date" id="date">
-    </div>
     <div class="field">
       <label>Time</label>
       <input type="text" id="time" placeholder="?">
@@ -187,11 +193,35 @@
     </div>
     <div class="field">
       <label>Cameras</label>
-      <input type="text" id="cameras" placeholder="?">
+      <select id="cameras">
+        <option value="" selected>-- Select --</option>
+        <option>Cams x2</option>
+        <option>Overhead Cam</option>
+        <option>Unboxing Cam</option>
+        <option>Rover Mode</option>
+        <option>Rover Mode + Cams</option>
+        <option>Other (See Notes)</option>
+      </select>
     </div>
     <div class="field">
       <label>Mics</label>
-      <input type="text" id="mics" placeholder="?">
+      <select id="mics">
+        <option value="" selected>-- Select --</option>
+        <option>Mics at Table</option>
+        <option>Lav at Podium</option>
+        <option>Handhelds Only</option>
+        <option>Lavs Only</option>
+        <option>Other (See Notes)</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Live?</label>
+      <select id="live">
+        <option value="" selected>-- Select --</option>
+        <option>Live to Public</option>
+        <option>Live to Private</option>
+        <option>Zoom Only</option>
+      </select>
     </div>
     <div class="field">
       <label>Lower Thirds</label>
@@ -264,13 +294,19 @@
 </div>
 
 <script>
-const ids = ['date','time','format','layout','cameras','mics','lowerThirds','catering','dishProject','organizer','moderator','panelists','ppts','oooSteps','meetingNotes'];
+const ids = ['workingTitle','eventDate','time','format','layout','cameras','mics','live','lowerThirds','catering','dishProject','organizer','moderator','panelists','ppts','oooSteps','meetingNotes'];
 
 function formatDate(isoDate) {
   if (!isoDate) return '';
   const [y, m, d] = isoDate.split('-').map(Number);
   const dt = new Date(y, m - 1, d);
   return dt.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+}
+
+function formatDateCode(isoDate) {
+  if (!isoDate) return '';
+  const [y, m, d] = isoDate.split('-');
+  return `${y.slice(2)}${m}${d}`;
 }
 
 function bulletize(text) {
@@ -296,14 +332,20 @@ function buildOutput() {
   const oooStepsBlock = bulletize(v.oooSteps);
   const meetingNotesBlock = bulletize(v.meetingNotes);
 
+  const codePart = formatDateCode(v.eventDate) ? `4SP${formatDateCode(v.eventDate)}` : '4SP';
+  const eventTitle = v.workingTitle ? `${codePart} - Scenario - ${v.workingTitle}` : `${codePart} - Scenario`;
+
   const out =
-`SCENARIO
-${formatDate(v.date)}
+`${eventTitle}
+
+SCENARIO
+${formatDate(v.eventDate)}
 ${v.time}
 FORMAT: ${v.format}
 LAYOUT: ${v.layout}
 CAMERAS: ${v.cameras}
 MICS: ${v.mics}
+LIVE?: ${v.live}
 LOWER THIRDS: ${v.lowerThirds}
 CATERING: ${v.catering}
 DISH PROJECT: ${v.dishProject}
@@ -363,7 +405,7 @@ function copyOutput() {
 
 function emailOutput() {
   const to = document.getElementById('emailTo').value.trim();
-  const subject = `Event Scenario: ${document.getElementById('format').value || 'Untitled'} - ${formatDate(document.getElementById('date').value) || ''}`;
+  const subject = `Event Scenario: ${document.getElementById('format').value || 'Untitled'} - ${formatDate(document.getElementById('eventDate').value) || ''}`;
   const body = document.getElementById('output').value;
   const mailto = `mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
   window.location.href = mailto;
