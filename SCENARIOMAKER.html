@@ -309,6 +309,13 @@ function formatDateCode(isoDate) {
   return `${y.slice(2)}${m}${d}`;
 }
 
+function getEventTitle() {
+  const eventDate = document.getElementById('eventDate').value;
+  const workingTitle = document.getElementById('workingTitle').value;
+  const codePart = formatDateCode(eventDate) ? `4SP${formatDateCode(eventDate)}` : '4SP';
+  return workingTitle ? `${codePart} - Scenario - ${workingTitle}` : `${codePart} - Scenario`;
+}
+
 function bulletize(text) {
   return text
     .split('\n')
@@ -332,8 +339,7 @@ function buildOutput() {
   const oooStepsBlock = bulletize(v.oooSteps);
   const meetingNotesBlock = bulletize(v.meetingNotes);
 
-  const codePart = formatDateCode(v.eventDate) ? `4SP${formatDateCode(v.eventDate)}` : '4SP';
-  const eventTitle = v.workingTitle ? `${codePart} - Scenario - ${v.workingTitle}` : `${codePart} - Scenario`;
+  const eventTitle = getEventTitle();
 
   const out =
 `${eventTitle}
@@ -405,7 +411,7 @@ function copyOutput() {
 
 function emailOutput() {
   const to = document.getElementById('emailTo').value.trim();
-  const subject = `Event Scenario: ${document.getElementById('format').value || 'Untitled'} - ${formatDate(document.getElementById('eventDate').value) || ''}`;
+  const subject = getEventTitle();
   const body = document.getElementById('output').value;
   const mailto = `mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
   window.location.href = mailto;
