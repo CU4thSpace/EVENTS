@@ -100,6 +100,16 @@
       line-height: 1.2;
     }
 
+    .event-logo {
+      position: absolute;
+      bottom: 60px;
+      left: 100px;
+      width: 300px;
+      height: auto;
+      opacity: 0.9;
+      z-index: 2;
+    }
+
     #loadingSpinner {
       position: fixed;
       top: 50%;
@@ -213,6 +223,13 @@
 
       overlay.appendChild(descDiv);
       overlay.appendChild(timeDiv);
+
+      const logoImg = document.createElement('img');
+      logoImg.className = 'event-logo';
+      logoImg.src = 'https://raw.githubusercontent.com/CU4thSpace/EVENTS/refs/heads/main/4SP_silver.001.png';
+      logoImg.alt = '4th Space';
+      overlay.appendChild(logoImg);
+
       eventDiv.appendChild(overlay);
       container.appendChild(eventDiv);
       eventDivs.push(eventDiv);
