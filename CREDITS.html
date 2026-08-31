@@ -13,6 +13,7 @@
     --ink:#ccc;
     --ink-dim:#888;
     --white:#fff;
+    --warn:#e0b25a;
   }
   *{box-sizing:border-box;}
   body{
@@ -49,6 +50,11 @@
     margin:1rem 0 0;
     line-height:1.3;
   }
+  header p.total{
+    font-size:.9rem;
+    color:var(--ink-dim);
+    margin:.6rem 0 0;
+  }
   main{
     max-width:1100px;
     margin:0 auto;
@@ -58,10 +64,11 @@
     display:flex;
     gap:.6rem;
     flex-wrap:wrap;
-    margin-bottom:2rem;
+    align-items:center;
+    margin-bottom:.8rem;
   }
-  .toolbar input{
-    flex:1;
+  .toolbar input[type="text"]{
+    flex:1 1 220px;
     min-width:200px;
     padding:.8rem 1rem;
     border:1px solid var(--line);
@@ -71,7 +78,40 @@
     font-size:1.1rem;
     border-radius:2px;
   }
-  .toolbar input::placeholder{ color:var(--ink-dim); }
+  .toolbar input[type="text"]::placeholder{ color:var(--ink-dim); }
+  .toolbar input[type="date"]{
+    padding:.75rem .8rem;
+    border:1px solid var(--line);
+    background:var(--card);
+    color:var(--ink);
+    font-family:inherit;
+    font-size:.95rem;
+    border-radius:2px;
+    color-scheme:dark;
+  }
+  .toolbar .sep{
+    width:1px;
+    align-self:stretch;
+    background:var(--line);
+    margin:0 .3rem;
+  }
+  .toolbar button{
+    padding:.75rem 1.1rem;
+    border:1px solid var(--line);
+    background:transparent;
+    color:var(--ink);
+    font-family:inherit;
+    font-size:.9rem;
+    text-transform:uppercase;
+    letter-spacing:.06em;
+    border-radius:2px;
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  .toolbar button:hover{ border-color:var(--ink); color:var(--white); }
+  .toolbar button.primary{ background:var(--ink); color:#111; border-color:var(--ink); font-weight:700; }
+  .toolbar button.primary:hover{ background:var(--white); }
+  .toolbar button:disabled{ opacity:.4; cursor:default; }
   .count{
     font-size:.85rem;
     color:var(--ink-dim);
@@ -79,7 +119,14 @@
     white-space:nowrap;
     text-transform:uppercase;
     letter-spacing:.08em;
+    margin-left:auto;
   }
+  .range-info{
+    font-size:.9rem;
+    color:var(--ink-dim);
+    margin:0 0 1.8rem;
+  }
+  .range-info--warning{ color:var(--warn); }
   .grid{
     display:grid;
     grid-template-columns:1fr;
@@ -201,6 +248,7 @@
   }
   @media (max-width:520px){
     ul.speaker-list{ columns:1; }
+    .count{ margin-left:0; }
   }
 </style>
 </head>
@@ -209,26 +257,40 @@
 <header>
   <p class="kicker">4TH SPACE · Concordia University</p>
   <h1>Event Credits Feed</h1>
-  <p class="sub">Organizers, participants, and speakers pulled from each event's page — fetched live, not part of the public RSS feed.</p>
+  <p class="sub">Organizers, participants, and speakers pulled live from each event's page.</p>
+  <p class="total" id="totalCount"></p>
 </header>
 
 <main>
   <div class="toolbar">
     <input type="text" id="searchBox" placeholder="Filter by name, org, or event title…" onkeyup="filterEvents()" disabled>
+    <span class="sep"></span>
+    <label for="startDate" class="visually-hidden">Start date</label>
+    <input type="date" id="startDate" aria-label="Start date">
+    <label for="endDate" class="visually-hidden">End date</label>
+    <input type="date" id="endDate" aria-label="End date">
+    <button id="applyRangeBtn" class="primary" disabled>Apply range</button>
+    <button id="resetRangeBtn" disabled>Reset</button>
     <span class="count" id="countLabel"></span>
   </div>
+  <p class="range-info" id="rangeInfo"></p>
 
-  <div id="status" class="status"><span class="spinner"></span> Fetching RSS feed…</div>
+  <div id="status" class="status"><span class="spinner"></span> Loading event list…</div>
   <div id="eventList" class="grid"></div>
 </main>
 
 <footer>
-  Fetched live from concordia.ca on page load.
+  Fetched live from concordia.ca on page load — sourced from the 4th Space Reference Calendar (full event history).
 </footer>
 
 <script>
-const RSS_URL = "https://www.concordia.ca/content/concordia/en/next-gen/4th-space/programming/RSSCAL/_jcr_content/content-main/grid_container_671899525/grid-container-parsys/events_list.xml";
+const LIST_URL = "https://www.concordia.ca/next-gen/4th-space/programming/fullcalendar.html";
 const CONCURRENCY = 4;
+const DEFAULT_COUNT = 25;
+const RANGE_CAP = 50;
+
+let allEvents = [];              // { title, link, date } — full history, sorted newest first
+const creditsCache = new Map();  // link -> credits object (or {error})
 
 function showError(title, detail){
   const status = document.getElementById('status');
@@ -240,7 +302,7 @@ function showError(title, detail){
 }
 
 function cleanText(str){
-  return str.replace(/\s+/g, ' ').trim();
+  return (str || '').replace(/\s+/g, ' ').trim();
 }
 
 async function fetchText(url){
@@ -249,24 +311,46 @@ async function fetchText(url){
   return await resp.text();
 }
 
-async function getFeedItems(){
-  const xmlText = await fetchText(RSS_URL);
-  const xml = new DOMParser().parseFromString(xmlText, 'application/xml');
-  const parseError = xml.querySelector('parsererror');
-  if(parseError) throw new Error('RSS feed did not parse as valid XML.');
-  const items = [...xml.querySelectorAll('item')].map(item => ({
-    title: cleanText(item.querySelector('title')?.textContent || ''),
-    link: (item.querySelector('link')?.textContent || '').trim().replace(/^http:/, 'https:'),
-    pubDate: (item.querySelector('pubDate')?.textContent || '').trim()
-  })).filter(i => i.link);
-  return items;
-}
-
-function formatDate(pubDate){
-  const d = new Date(pubDate);
-  if(isNaN(d)) return pubDate;
+function formatDateFromObj(d){
+  if(!(d instanceof Date) || isNaN(d)) return '';
   return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
 }
+
+/* ---------- Step 1: load the full event list from the Reference Calendar page ---------- */
+
+async function getAllEventsFromList(){
+  const html = await fetchText(LIST_URL);
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  const anchors = [...doc.querySelectorAll('a[href*="/cuevents/"]')];
+  const seen = new Set();
+  const events = [];
+
+  for(const a of anchors){
+    const href = a.getAttribute('href');
+    if(!href) continue;
+    const m = href.match(/\/(\d{4})\/(\d{2})\/(\d{2})\//);
+    if(!m) continue;
+
+    let link;
+    try { link = new URL(href, LIST_URL).href.replace(/^http:/, 'https:'); } catch(e){ continue; }
+    if(seen.has(link)) continue;
+
+    const title = cleanText(a.textContent) || cleanText(a.getAttribute('title'));
+    if(!title) continue; // e.g. a wrapping image link with no text — a later anchor to the same href may supply it
+
+    seen.add(link);
+    const [, y, mo, d] = m;
+    const date = new Date(`${y}-${mo}-${d}T00:00:00`);
+    if(isNaN(date)) continue;
+
+    events.push({ title, link, date });
+  }
+
+  events.sort((a, b) => b.date - a.date); // newest first
+  return events;
+}
+
+/* ---------- Step 2: per-event page — credits + date/time panel ---------- */
 
 function extractThumbnail(doc, pageUrl){
   const og = doc.querySelector('meta[property="og:image"]');
@@ -280,13 +364,32 @@ function extractThumbnail(doc, pageUrl){
   return null;
 }
 
-/* Same three credit patterns as before: accordion, italic line, Speakers heading. */
+function extractInfoPanel(doc){
+  // Sidebar blocks: <div class="c-textimage"><div class="rte"><div class="text"><h6>Label</h6><div class="info-text"><span>Value</span>...
+  const info = {};
+  doc.querySelectorAll('.info .c-textimage').forEach(block => {
+    const label = cleanText(block.querySelector('h6')?.textContent).toLowerCase();
+    const valueEl = block.querySelector('.info-text span, .info-text, p');
+    if(!label || !valueEl) return;
+    const temp = document.createElement('div');
+    temp.innerHTML = valueEl.innerHTML.replace(/<br\s*\/?>/gi, ', ');
+    const value = cleanText(temp.textContent);
+    if(value) info[label] = value;
+  });
+  return info;
+}
+
 function extractCredits(pageHtml, pageUrl){
   const doc = new DOMParser().parseFromString(pageHtml, 'text/html');
   const result = {
     organizedBy: null, withSupport: null, participants: [], speakers: [],
-    description: null, hasCredits: false, thumbnail: extractThumbnail(doc, pageUrl)
+    description: null, hasCredits: false,
+    thumbnail: extractThumbnail(doc, pageUrl),
+    dateTimeText: null
   };
+
+  const infoPanel = extractInfoPanel(doc);
+  result.dateTimeText = infoPanel['date & time'] || null;
 
   let accordionBody = null;
   doc.querySelectorAll('.accordion-header').forEach(header => {
@@ -308,7 +411,7 @@ function extractCredits(pageHtml, pageUrl){
       if(!b) continue;
       const label = cleanText(b.textContent).replace(/:$/,'').toLowerCase();
       const key = labelMap[label];
-      if(!key) continue;
+      if(!key) continue; // includes "Spectrum ID" and anything else not in the map — intentionally skipped
       result.hasCredits = true;
       const clone = el.cloneNode(true);
       const bClone = clone.querySelector('b');
@@ -339,6 +442,11 @@ function extractCredits(pageHtml, pageUrl){
         result.description = remainderText;
       }
     }
+  }
+
+  // Drop placeholder-only participant lists (e.g. a single "TBA")
+  if(result.participants.length === 1 && /^tba$/i.test(result.participants[0])){
+    result.participants = [];
   }
 
   if(!result.organizedBy){
@@ -373,6 +481,8 @@ function extractCredits(pageHtml, pageUrl){
   return result;
 }
 
+/* ---------- Rendering ---------- */
+
 function renderEvent(item, credits){
   const article = document.createElement('article');
   article.className = credits.hasCredits ? 'event' : 'event no-credits';
@@ -382,12 +492,13 @@ function renderEvent(item, credits){
   article.setAttribute('data-search', searchBlob);
 
   const bannerStyle = credits.thumbnail ? `style="background-image:url('${credits.thumbnail}')"` : '';
+  const dateLine = credits.dateTimeText || formatDateFromObj(item.date);
 
   let inner = `
     <div class="event-banner" ${bannerStyle}>
       <div class="banner-text">
         <h2 class="event-title"><a href="${item.link}" target="_blank" rel="noopener">${item.title}</a></h2>
-        <p class="event-date">${formatDate(item.pubDate)}</p>
+        <p class="event-date">${dateLine}</p>
       </div>
     </div>
     <div class="credit-block">
@@ -412,6 +523,22 @@ function renderEvent(item, credits){
   return article;
 }
 
+function renderFailedEvent(item, message){
+  const article = document.createElement('article');
+  article.className = 'event no-credits no-image';
+  article.setAttribute('data-search', item.title.toLowerCase());
+  article.innerHTML = `
+    <div class="event-banner">
+      <div class="banner-text">
+        <h2 class="event-title"><a href="${item.link}" target="_blank" rel="noopener">${item.title}</a></h2>
+        <p class="event-date">${formatDateFromObj(item.date)}</p>
+      </div>
+    </div>
+    <div class="credit-block"><p class="empty-note">Couldn't fetch this event page (${message}).</p></div>
+  `;
+  return article;
+}
+
 function filterEvents(){
   const q = document.getElementById('searchBox').value.toLowerCase();
   const events = document.querySelectorAll('.event');
@@ -421,7 +548,7 @@ function filterEvents(){
     ev.style.display = match ? '' : 'none';
     if(match) shown++;
   });
-  document.getElementById('countLabel').textContent = shown + ' of ' + events.length + ' events';
+  document.getElementById('countLabel').textContent = shown + ' of ' + events.length + ' shown';
 }
 
 async function mapWithConcurrency(items, limit, fn){
@@ -437,61 +564,126 @@ async function mapWithConcurrency(items, limit, fn){
   return results;
 }
 
+/* ---------- View selection: default (25 most recent past) vs date range (capped at 50) ---------- */
+
+function computeDefaultView(){
+  const now = new Date();
+  return allEvents.filter(e => e.date <= now).slice(0, DEFAULT_COUNT);
+}
+
+function computeRangeView(startVal, endVal){
+  const start = startVal ? new Date(startVal + 'T00:00:00') : null;
+  const end = endVal ? new Date(endVal + 'T23:59:59') : null;
+  let matches = allEvents.filter(e => (!start || e.date >= start) && (!end || e.date <= end));
+  const totalMatches = matches.length;
+  let capped = false;
+  if(matches.length > RANGE_CAP){
+    matches = matches.slice(0, RANGE_CAP); // most recent within the range
+    capped = true;
+  }
+  return { matches, totalMatches, capped };
+}
+
+function setRangeInfo(text, isWarning){
+  const el = document.getElementById('rangeInfo');
+  el.textContent = text;
+  el.className = isWarning ? 'range-info range-info--warning' : 'range-info';
+}
+
+async function fetchCreditsFor(events){
+  const toFetch = events.filter(e => !creditsCache.has(e.link));
+  if(!toFetch.length) return;
+  await mapWithConcurrency(toFetch, CONCURRENCY, async (item) => {
+    try {
+      const pageHtml = await fetchText(item.link);
+      creditsCache.set(item.link, extractCredits(pageHtml, item.link));
+    } catch(err){
+      creditsCache.set(item.link, { error: err.message });
+    }
+  });
+}
+
+async function renderSet(events){
+  const list = document.getElementById('eventList');
+  const status = document.getElementById('status');
+  list.innerHTML = '';
+  status.style.display = '';
+  status.innerHTML = `<span class="spinner"></span> Fetching credits for ${events.length} event${events.length === 1 ? '' : 's'}…`;
+
+  await fetchCreditsFor(events);
+
+  events.forEach(item => {
+    const credits = creditsCache.get(item.link);
+    const article = (credits && credits.error) ? renderFailedEvent(item, credits.error) : renderEvent(item, credits);
+    list.appendChild(article);
+  });
+
+  status.style.display = 'none';
+  filterEvents();
+}
+
+/* ---------- Controls ---------- */
+
+document.getElementById('applyRangeBtn').addEventListener('click', async () => {
+  const startVal = document.getElementById('startDate').value;
+  const endVal = document.getElementById('endDate').value;
+  if(!startVal && !endVal){
+    setRangeInfo('Pick a start date, an end date, or both, then apply.', true);
+    return;
+  }
+  const { matches, totalMatches, capped } = computeRangeView(startVal, endVal);
+  if(!matches.length){
+    setRangeInfo('No events found in that range.', true);
+    document.getElementById('eventList').innerHTML = '';
+    document.getElementById('countLabel').textContent = '';
+    return;
+  }
+  if(capped){
+    setRangeInfo(`Showing the ${RANGE_CAP} most recent of ${totalMatches} matching events — narrow the date range to see the rest.`, true);
+  } else {
+    setRangeInfo(`Showing all ${matches.length} events in that range.`, false);
+  }
+  await renderSet(matches);
+});
+
+document.getElementById('resetRangeBtn').addEventListener('click', async () => {
+  document.getElementById('startDate').value = '';
+  document.getElementById('endDate').value = '';
+  const view = computeDefaultView();
+  setRangeInfo(`Showing the ${view.length} most recent past events.`, false);
+  await renderSet(view);
+});
+
+/* ---------- Boot ---------- */
+
 async function main(){
   const status = document.getElementById('status');
-  const list = document.getElementById('eventList');
+  status.innerHTML = `<span class="spinner"></span> Loading event list…`;
 
-  let feedItems;
   try{
-    feedItems = await getFeedItems();
+    allEvents = await getAllEventsFromList();
   } catch(err){
     showError(
-      'Could not load the RSS feed from the browser.',
-      `<p>concordia.ca likely isn't sending CORS headers that allow this page's origin to read the response.</p>
+      'Could not load the event list from the browser.',
+      `<p>concordia.ca may not be sending CORS headers that allow this page's origin to read <code>fullcalendar.html</code>, the same way it may restrict individual event pages.</p>
        <p>Error detail: <code>${err.message}</code></p>`
     );
     return;
   }
 
-  status.innerHTML = `<span class="spinner"></span> Loaded ${feedItems.length} events. Fetching credits from each page…`;
-
-  let failCount = 0;
-  const rendered = await mapWithConcurrency(feedItems, CONCURRENCY, async (item) => {
-    try {
-      const pageHtml = await fetchText(item.link);
-      const credits = extractCredits(pageHtml, item.link);
-      return renderEvent(item, credits);
-    } catch(err){
-      failCount++;
-      const article = document.createElement('article');
-      article.className = 'event no-credits no-image';
-      article.setAttribute('data-search', item.title.toLowerCase());
-      article.innerHTML = `
-        <div class="event-banner">
-          <div class="banner-text">
-            <h2 class="event-title"><a href="${item.link}" target="_blank" rel="noopener">${item.title}</a></h2>
-            <p class="event-date">${formatDate(item.pubDate)}</p>
-          </div>
-        </div>
-        <div class="credit-block"><p class="empty-note">Couldn't fetch this event page (${err.message}).</p></div>
-      `;
-      return article;
-    }
-  });
-
-  rendered.forEach(article => list.appendChild(article));
-
-  if(failCount === feedItems.length){
-    showError(
-      'RSS loaded, but every individual event page failed to fetch.',
-      `<p>This is the CORS pattern you'd expect if concordia.ca allows the RSS/XML endpoint to be read cross-origin but not the regular HTML event pages.</p>`
-    );
-  } else {
-    status.remove();
+  if(!allEvents.length){
+    showError('No events found.', `<p>The page loaded but no links matched the expected event URL pattern (<code>/cuevents/.../YYYY/MM/DD/...</code>). The site markup may have changed.</p>`);
+    return;
   }
 
+  document.getElementById('totalCount').textContent = `${allEvents.length} events found on record`;
   document.getElementById('searchBox').disabled = false;
-  filterEvents();
+  document.getElementById('applyRangeBtn').disabled = false;
+  document.getElementById('resetRangeBtn').disabled = false;
+
+  const view = computeDefaultView();
+  setRangeInfo(`Showing the ${view.length} most recent past events.`, false);
+  await renderSet(view);
 }
 
 main();
