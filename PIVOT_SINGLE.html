@@ -123,12 +123,41 @@
       word-break: keep-all;
       overflow-wrap: normal;
     }
+
+    #saveBtn {
+      position: fixed;
+      bottom: 40px;
+      right: 40px;
+      z-index: 9999;
+      font-size: 2rem;
+      color: white;
+      background: rgba(255,255,255,0.2);
+      border: none;
+      border-radius: 8px;
+      width: 60px;
+      height: 60px;
+      cursor: pointer;
+      line-height: 1;
+      text-align: center;
+    }
+
+    #saveBtn:hover {
+      background: rgba(255,255,255,0.4);
+    }
+
+    #saveBtn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
   </style>
 </head>
 <body>
 
   <div id="loadingSpinner">Loading event…</div>
   <div class="event-container" id="eventContainer"></div>
+  <button id="saveBtn" onclick="saveAsPng()" title="Save as PNG"><span style="font-size: 1.5rem;">⬇</span></button>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
 <script>
   function parseEventTime(timeString) {
@@ -267,7 +296,7 @@
   function displayEvent(eventData, container) {
     const eventDiv = document.createElement('div');
     eventDiv.className = 'event';
-    
+
     if (eventData.imageUrl) {
       eventDiv.style.backgroundImage = `url("${eventData.imageUrl}")`; // ← fixed
     } else {
@@ -315,6 +344,60 @@
 
     const imgLoader = new Image();
     imgLoader.src = eventData.imageUrl;
+  }
+
+  async function saveAsPng() {
+    const saveBtn = document.getElementById('saveBtn');
+    const container = document.getElementById('eventContainer');
+
+    saveBtn.disabled = true;
+    saveBtn.style.visibility = 'hidden';
+
+    // Temporarily remove the fit-to-screen transform so html2canvas
+    // captures the container at its true native 1080x1920 size.
+    const previousTransform = container.style.transform;
+    const previousLeft = container.style.left;
+    const previousTop = container.style.top;
+    container.style.transform = 'none';
+    container.style.left = '0px';
+    container.style.top = '0px';
+
+    try {
+      const canvas = await html2canvas(container, {
+        useCORS: true,
+        allowTaint: false,
+        scale: 1,
+        width: 1080,
+        height: 1920,
+        windowWidth: 1080,
+        windowHeight: 1920,
+        backgroundColor: '#111',
+        logging: false,
+        imageTimeout: 10000,
+      });
+
+      const currentTitleEl = document.querySelector('.event-title');
+      const titleText = currentTitleEl?.innerText || 'event';
+      const safeName = titleText
+        .replace(/[^a-z0-9]/gi, '_')
+        .replace(/_+/g, '_')
+        .toLowerCase()
+        .slice(0, 50);
+
+      const link = document.createElement('a');
+      link.download = `4thspace_${safeName}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    } catch (err) {
+      console.error('PNG export failed:', err);
+      alert('Export failed — see console for details.');
+    } finally {
+      container.style.transform = previousTransform;
+      container.style.left = previousLeft;
+      container.style.top = previousTop;
+      saveBtn.style.visibility = '';
+      saveBtn.disabled = false;
+    }
   }
 
   function smartLineBreaking(text) {
