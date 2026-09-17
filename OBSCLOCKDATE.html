@@ -245,6 +245,9 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
   <script>
+    // Where the clicker's "back" button (ArrowLeft / PageUp) should send the browser
+    const CLICKER_BACK_URL = 'https://cu4thspace.github.io/LOWERTHIRDS/L3byCSV.html';
+
     let zoomLevel = 1;
     let currentEventIndex = 0;
     let allEvents = [];
@@ -297,8 +300,9 @@
         e.preventDefault();
         nextEvent();
       } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+        // Clicker "back" button now navigates to the lower-thirds page
         e.preventDefault();
-        location.reload();
+        window.location.href = CLICKER_BACK_URL;
       }
     });
 
