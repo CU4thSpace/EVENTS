@@ -2,158 +2,181 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=1920, height=1080"/>
   <link rel="stylesheet" href="https://use.typekit.net/paf7uxj.css">
-  <title>Concordia 4th Space Events</title>
+  <title>4thSpace Events Grid</title>
   <style>
-    body {
+    html, body {
       margin: 0;
-      font-family: "gill-sans-nova-condensed", sans-serif;
-      background: #111;
-    }
-
-    h2 {
-      font-family: gill-sans-nova, sans-serif;
-      font-weight: 300;
-      font-style: italic;
-      font-size: 66px;
-    }
-
-    .events-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      grid-template-rows: repeat(3, 1fr);
-      height: 100vh;
-      width: 100vw;
-      opacity: 0;
-      visibility: hidden;
-      transition: opacity 0.5s ease;
-    }
-
-    .events-grid.visible {
-      opacity: 1;
-      visibility: visible;
-    }
-
-    .event {
-      position: relative;
-      background-size: cover;
-      background-position: center;
+      padding: 0;
+      width: 1920px;
+      height: 1080px;
       overflow: hidden;
+      background: #111;
       color: #fff;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border: 6px solid white;
+      font-family: "gill-sans-nova-condensed", sans-serif;
     }
 
-    .event::before {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.6);
-      z-index: 0;
+    /* 4 columns x 3 rows = 12 events */
+    #grid {
+      box-sizing: border-box;
+      width: 1920px;
+      height: 1080px;
+      padding: 30px;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      grid-template-rows: repeat(3, 1fr);
+      gap: 20px;
     }
 
-    .event-overlay {
+    .card {
       position: relative;
-      z-index: 1;
+      overflow: hidden;
+      border-radius: 10px;
+      border: 2px solid #444;
+      background: #222;
+    }
+
+    .card img.bg {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .overlay {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100%;
+      box-sizing: border-box;
+      padding: 16px 20px;
+      background: rgba(0, 0, 0, 0.6);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
       text-align: center;
-      padding: 20px;
-      max-width: 90%;
     }
 
-    .event-title {
-      font-size: 3.3rem;
-      font-weight: bold;
+    .title {
+      font-size: 38px;
+      line-height: 1.05;
       margin-bottom: 10px;
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow-wrap: break-word;
     }
 
-    .event-description {
-      font-size: 2rem;
-      line-height: 1.4;
+    .meta {
+      font-size: 22px;
+      line-height: 1.15;
       opacity: 0.9;
     }
 
-    /* Loading Spinner */
-    #loadingSpinner {
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      color: white;
-      font-size: 2rem;
-      font-family: sans-serif;
+    /* the italic description (h2) is hidden to keep the grid clean */
+    .meta h2 { display: none; }
+
+    .emoji-eye {
+      display: inline-block;
+      width: 1em;
+      height: auto;
+      max-width: 1em;
+      max-height: 1em;
+      vertical-align: middle;
+      object-fit: contain;
     }
+    .no-break-look { white-space: nowrap; display: inline-block; }
   </style>
 </head>
 <body>
+  <div id="grid"></div>
 
-<div id="loadingSpinner">Loading events…</div>
-<div class="events-grid" id="eventsGrid"></div>
+  <script>
+    const RSS_URL = "https://www.concordia.ca/content/concordia/en/next-gen/4th-space/programming/RSSCAL/_jcr_content/content-main/grid_container_671899525/grid-container-parsys/events_list_88801239.xml";
+    const MAX_EVENTS = 12;
+    const EYE = '<img src="https://raw.githubusercontent.com/CU4thSpace/EVENTS/refs/heads/main/emoji-eyes.png" alt="👀" class="emoji-eye">';
 
-<script>
-  async function fetchAndDisplayEvents() {
-    const response = await fetch('https://www.concordia.ca/content/concordia/en/next-gen/4th-space/programming/RSSCAL/_jcr_content/content-main/grid_container_671899525/grid-container-parsys/events_list.xml');
-    const text = await response.text();
-    const parser = new DOMParser();
-    const xml = parser.parseFromString(text, 'application/xml');
-    const items = Array.from(xml.querySelectorAll('item')).slice(0, 6); // Exactly 6
+    function decodeEntities(str = "") {
+      const txt = document.createElement("textarea");
+      txt.innerHTML = str;
+      return txt.value;
+    }
 
-    const grid = document.getElementById('eventsGrid');
-    const imagePromises = [];
+    function processEmojiEyes(text) {
+      return text
+        .replace(/L👀k/g, '<span class="no-break-look">L' + EYE + 'k</span>')
+        .replace(/L👀K/g, '<span class="no-break-look">L' + EYE + 'K</span>');
+    }
 
-    items.forEach(item => {
-      const title = item.querySelector('title')?.textContent || 'Untitled';
-      const descriptionRaw = item.querySelector('description')?.textContent || '';
+    function extractImage(description) {
+      const tmp = document.createElement("div");
+      tmp.innerHTML = description;
+      const img = tmp.querySelector("img");
+      let src = "";
+      if (img) { src = img.src; img.remove(); }
+      return { src, html: decodeEntities(tmp.innerHTML) };
+    }
 
-      const tempDiv = document.createElement('div');
-      tempDiv.innerHTML = descriptionRaw;
-      const img = tempDiv.querySelector('img');
-      const imageUrl = img ? img.src : 'https://via.placeholder.com/300';
+    async function loadEvents() {
+      try {
+        const res = await fetch(`${RSS_URL}?t=${Date.now()}`, { cache: "no-store" });
+        const xml = new DOMParser().parseFromString(await res.text(), "application/xml");
+        const items = [...xml.querySelectorAll("item")].slice(0, MAX_EVENTS).map(item => ({
+          title: decodeEntities(item.querySelector("title")?.textContent || "No title"),
+          description: item.querySelector("description")?.textContent || ""
+        }));
+        render(items);
+      } catch (err) {
+        console.error("Error fetching RSS feed:", err);
+        // keep whatever is already on screen; show a message only on first load
+        const grid = document.getElementById("grid");
+        if (!grid.children.length) grid.textContent = "Failed to load feed.";
+      }
+    }
 
-      const cleanDescription = tempDiv.textContent.trim();
+    function render(items) {
+      const grid = document.getElementById("grid");
+      grid.innerHTML = "";
 
-      const eventDiv = document.createElement('div');
-      eventDiv.className = 'event';
-      eventDiv.style.backgroundImage = `url(${imageUrl})`;
+      for (let i = 0; i < MAX_EVENTS; i++) {
+        const card = document.createElement("div");
+        card.className = "card";
+        const item = items[i];
 
-      const overlay = document.createElement('div');
-      overlay.className = 'event-overlay';
+        if (item) {
+          const { src, html } = extractImage(item.description);
+          if (src) {
+            const img = document.createElement("img");
+            img.className = "bg";
+            img.src = src;
+            card.appendChild(img);
+          }
+          const overlay = document.createElement("div");
+          overlay.className = "overlay";
 
-      const titleDiv = document.createElement('div');
-      titleDiv.className = 'event-title';
-      titleDiv.textContent = title;
+          const title = document.createElement("div");
+          title.className = "title";
+          title.innerHTML = processEmojiEyes(item.title);
 
-      const descDiv = document.createElement('div');
-      descDiv.className = 'event-description';
-      descDiv.textContent = cleanDescription;
+          const meta = document.createElement("div");
+          meta.className = "meta";
+          meta.innerHTML = html;
 
-      overlay.appendChild(titleDiv);
-      overlay.appendChild(descDiv);
-      eventDiv.appendChild(overlay);
-      grid.appendChild(eventDiv);
+          overlay.appendChild(title);
+          overlay.appendChild(meta);
+          card.appendChild(overlay);
+        }
+        grid.appendChild(card);
+      }
+    }
 
-      // Preload background image
-      const imgLoader = new Image();
-      const imgPromise = new Promise(resolve => {
-        imgLoader.onload = resolve;
-        imgLoader.onerror = resolve;
-        imgLoader.src = imageUrl;
-      });
-      imagePromises.push(imgPromise);
-    });
-
-    // Wait for all images to load
-    await Promise.all(imagePromises);
-
-    // Hide spinner, reveal grid
-    document.getElementById('loadingSpinner').style.display = 'none';
-    grid.classList.add('visible');
-  }
-
-  fetchAndDisplayEvents();
-</script>
-
+    loadEvents();
+    setInterval(loadEvents, 5 * 60 * 1000); // refresh every 5 minutes
+  </script>
 </body>
 </html>
