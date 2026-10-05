@@ -155,6 +155,17 @@
       letter-spacing: 0.02em;
     }
 
+    /* Subtitle: sits between the date and the title. Text is set in the SUBTITLE block at the top of the script. */
+    .event-subtitle {
+      max-width: 52%;
+      font-size: clamp(0.9rem, 2.4vw, 2.4rem);  /* between date and title in weight; adjust to taste */
+      font-weight: normal;
+      line-height: 1.1;
+      color: #ccc;
+      opacity: 0.9;
+      letter-spacing: 0.02em;
+    }
+
     .event-title {
       max-width: 52%;
       font-size: clamp(2rem, 7.5vw, 7.5rem);
@@ -245,6 +256,20 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
   <script>
+    // ================================================================
+    // SUBTITLE  ←  EDIT HERE
+    // Small line of text shown BETWEEN the date and the event title.
+    //
+    // SUBTITLE_TEXT: shows on every event. Leave as '' for none.
+    // SUBTITLE_BY_TITLE: optional per-event overrides. The key must match
+    //   the event title exactly as it appears in the RSS feed. An override
+    //   wins over SUBTITLE_TEXT. Use '' to hide it for one event.
+    // ================================================================
+    const SUBTITLE_TEXT = 'COHDS Storytelling Festival: Oral History & Creative Practice';   // e.g. 'Free admission · Everyone welcome'
+    const SUBTITLE_BY_TITLE = {
+      // 'Exact Event Title Here': 'Subtitle for just this event',
+    };
+
     // Where the clicker's "back" button (ArrowLeft / PageUp) should send the browser
     const CLICKER_BACK_URL = 'https://cu4thspace.github.io/LOWERTHIRDS/L3byCSV.html';
 
@@ -407,6 +432,15 @@
         const options = { weekday: 'long', month: 'long', day: 'numeric' };
         dateDiv.textContent = eventDate.toLocaleDateString('en-US', options);
         overlay.appendChild(dateDiv);
+
+        // ---- Subtitle (between date and title). Text is set at the top of the script. ----
+        const subtitleText = (title in SUBTITLE_BY_TITLE) ? SUBTITLE_BY_TITLE[title] : SUBTITLE_TEXT;
+        if (subtitleText) {
+          const subtitleDiv = document.createElement('div');
+          subtitleDiv.className = 'event-subtitle';
+          subtitleDiv.textContent = subtitleText;
+          overlay.appendChild(subtitleDiv);
+        }
 
         const maxLength = 25;
         const titleDiv = document.createElement('div');
