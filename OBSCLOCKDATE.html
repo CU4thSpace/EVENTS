@@ -273,6 +273,20 @@
     // Where the clicker's "back" button (ArrowLeft / PageUp) should send the browser
     const CLICKER_BACK_URL = 'https://cu4thspace.github.io/LOWERTHIRDS/L3byCSV.html';
 
+    // Navigate to a page while forcing a fresh load on the BrightSign:
+    //  - a unique query string makes every visit look like a brand-new URL (defeats HTTP/bfcache reuse)
+    //  - location.replace() avoids stacking history entries
+    function goFresh(baseUrl) {
+      const url = new URL(baseUrl);
+      url.searchParams.set('_', Date.now());
+      window.location.replace(url.toString());
+    }
+
+    // If the browser restores this page from the back/forward cache, force a real reload
+    window.addEventListener('pageshow', function(e) {
+      if (e.persisted) location.reload();
+    });
+
     let zoomLevel = 1;
     let currentEventIndex = 0;
     let allEvents = [];
@@ -325,9 +339,9 @@
         e.preventDefault();
         nextEvent();
       } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
-        // Clicker "back" button now navigates to the lower-thirds page
+        // Clicker "back" button navigates to the lower-thirds page (fresh load every time)
         e.preventDefault();
-        window.location.href = CLICKER_BACK_URL;
+        goFresh(CLICKER_BACK_URL);
       }
     });
 
