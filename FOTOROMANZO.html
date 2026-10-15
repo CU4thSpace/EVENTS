@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FOTOROMANZA!</title>
+<link href="https://fonts.googleapis.com/css2?family=Bangers&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#14141f;--paper:#e8ebef;--side:#fff;--yellow:#ffd400;--red:#e63946;--line:#c9cfd8}
+*{box-sizing:border-box}
+body{margin:0;font:14px/1.4 system-ui,sans-serif;color:var(--ink);background:var(--paper);display:grid;grid-template-columns:360px 1fr;min-height:100vh}
+aside{background:var(--side);border-right:3px solid var(--ink);padding:16px;overflow-y:auto;max-height:100vh;position:sticky;top:0}
+h1{font:34px Bangers,Impact,sans-serif;letter-spacing:1px;margin:0 0 12px;color:var(--ink);text-shadow:3px 3px 0 var(--yellow)}
+h2{font-size:13px;margin:16px 0 6px}
+label{display:block;margin:6px 0 2px;font-size:12px}
+input[type=file],select,input[type=number],textarea{width:100%;font:inherit;padding:5px;border:2px solid var(--ink);border-radius:0;background:#fff}
+textarea{resize:vertical;min-height:56px}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.row label{display:flex;gap:4px;align-items:center;margin:4px 0}
+button{font:inherit;font-weight:600;padding:7px 12px;border:2px solid var(--ink);background:var(--yellow);box-shadow:3px 3px 0 var(--ink);cursor:pointer}
+button:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
+button:disabled{opacity:.45;cursor:not-allowed}
+button.sm{padding:2px 7px;box-shadow:2px 2px 0 var(--ink);background:#fff}
+button.go{background:var(--red);color:#fff}
+:focus-visible{outline:3px solid var(--red);outline-offset:2px}
+video{width:100%;background:#000;border:2px solid var(--ink)}
+.panel{border:2px solid var(--ink);padding:6px;margin:8px 0;background:#f7f8fa}
+.panel.off{opacity:.45}
+.panel .top{display:flex;gap:6px;align-items:center;margin-bottom:4px}
+.panel img{width:72px;border:2px solid var(--ink)}
+.panel .top input{width:78px}
+main{padding:20px;display:flex;justify-content:center;align-items:flex-start}
+canvas#page{max-width:100%;max-height:calc(100vh - 40px);border:3px solid var(--ink);box-shadow:8px 8px 0 var(--ink);background:#fff}
+.hint{font-size:12px;color:#555;margin:4px 0}
+@media(max-width:800px){body{grid-template-columns:1fr}aside{position:static;max-height:none}}
+</style>
+</head>
+<body>
+<aside>
+  <h1>FOTOROMANZA!</h1>
+  <label for="vf">Video (MP4)</label>
+  <input id="vf" type="file" accept="video/*">
+  <label for="sf">Captions (SRT or VTT)</label>
+  <input id="sf" type="file" accept=".srt,.vtt,text/plain">
+  <div class="hint" id="status">Load a video to begin.</div>
+  <video id="vid" controls muted playsinline></video>
+
+  <h2>Panels</h2>
+  <div class="row">
+    <button id="auto" disabled>Auto-pick</button>
+    <button id="grabNow" disabled>Grab current frame</button>
+    <button id="clear" class="sm">Clear</button>
+  </div>
+  <div class="hint">Auto-pick spreads panels evenly across the captions. Or scrub the video and grab frames yourself.</div>
+  <div id="list"></div>
+
+  <h2>Look</h2>
+  <label for="layout">Page layout</label>
+  <select id="layout"></select>
+  <label for="style">Caption style</label>
+  <select id="style"><option value="nar">Narration box (yellow)</option><option value="bub">Bubble (white)</option></select>
+  <label for="pos">Caption position</label>
+  <select id="pos"><option value="alt">Alternate</option><option value="top">Top</option><option value="bot">Bottom</option></select>
+  <div class="row">
+    <label><input type="checkbox" id="caps" checked> ALL CAPS</label>
+    <label><input type="checkbox" id="punch" checked> Punchy colour</label>
+    <label><input type="checkbox" id="half" checked> Halftone</label>
+  </div>
+  <p><button id="dl" class="go">Download PNG</button></p>
+</aside>
+<main><canvas id="page"></canvas></main>
+
+<script>
+const $=id=>document.getElementById(id), V=$('vid'), cv=$('page'), x=cv.getContext('2d');
+let cues=[], panels=[];
+
+/* ---------- layouts: rows of [height, [widths]] as fractions of the page ---------- */
+const rows=r=>{let y=0,o=[];r.forEach(([h,ws])=>{let px=0;ws.forEach(w=>{o.push([px,y,w,h]);px+=w});y+=h});return o};
+const T=1/3;
+const LAYOUTS={
+  'Classic 2×3 (6 panels)':rows([[T,[.5,.5]],[T,[.5,.5]],[T,[.5,.5]]]),
+  'Staggered (6 panels)':rows([[T,[.6,.4]],[T,[.35,.65]],[T,[.5,.5]]]),
+  'Splash + 4 (5 panels)':rows([[.4,[1]],[.3,[.5,.5]],[.3,[.6,.4]]]),
+  'Four-up (4 panels)':rows([[.5,[.5,.5]],[.5,[.5,.5]]]),
+  'Strip (3 panels)':rows([[T,[1]],[T,[1]],[T,[1]]])
+};
+Object.keys(LAYOUTS).forEach(k=>$('layout').add(new Option(k,k)));
+
+/* ---------- captions ---------- */
+const toSec=(h,m,s,ms)=>(+h||0)*3600+ +m*60+ +s+ +ms/1000;
+function clean(t){
+  return t.replace(/<[^>]+>/g,'').replace(/\{[^}]*\}/g,'').replace(/\[[^\]]*\]|\([^)]*\)/g,'')
+    .replace(/[♪♫]/g,'').replace(/^\s*[-–]?\s*>>\s*/gm,'').replace(/\s*\n\s*/g,' ')
+    .replace(/\s+/g,' ').trim().replace(/^[a-z]/,c=>c.toUpperCase());
+}
+function parseCaptions(txt){
+  const out=[], re=/(?:(\d+):)?(\d+):(\d+)[,.](\d+)\s*-->\s*(?:(\d+):)?(\d+):(\d+)[,.](\d+)[^\n]*\n([\s\S]*?)(?:\n\s*\n|$)/g;
+  let m;
+  while((m=re.exec(txt.replace(/\r/g,'')))){
+    const text=clean(m[9]);
+    if(!text) continue;
+    const prev=out[out.length-1];
+    if(prev&&prev.text===text) {prev.e=toSec(m[5],m[6],m[7],m[8]);continue}
+    out.push({s:toSec(m[1],m[2],m[3],m[4]),e:toSec(m[5],m[6],m[7],m[8]),text});
+  }
+  return out;
+}
+function textAt(t){
+  if(!cues.length) return '';
+  let i=cues.findIndex(c=>t>=c.s&&t<=c.e);
+  if(i<0){let b=1e9;i=0;cues.forEach((c,k)=>{const d=Math.min(Math.abs(c.s-t),Math.abs(c.e-t));if(d<b){b=d;i=k}})}
+  let s=cues[i].text,k=i+1;
+  while(s.split(' ').length<8&&cues[k]&&k<i+3){s+=' '+cues[k].text;k++}
+  return s;
+}
+
+/* ---------- frames ---------- */
+async function grab(t){
+  t=Math.max(0,Math.min(t,(V.duration||t)-.05));
+  V.pause();
+  if(Math.abs(V.currentTime-t)>.01) await new Promise(r=>{V.addEventListener('seeked',r,{once:true});V.currentTime=t});
+  const w=Math.min(V.videoWidth,1280),h=Math.round(w*V.videoHeight/V.videoWidth);
+  const c=document.createElement('canvas');c.width=w;c.height=h;c.getContext('2d').drawImage(V,0,0,w,h);
+  const th=document.createElement('canvas');th.width=72;th.height=Math.round(72*h/w);th.getContext('2d').drawImage(c,0,0,th.width,th.height);
+  return {c,th:th.toDataURL('image/jpeg',.6)};
+}
+async function addPanel(t,text){
+  const g=await grab(t);
+  panels.push({t,text:text??textAt(t),edited:false,...g});
+  redraw();
+}
+
+/* ---------- panel list ---------- */
+function renderList(){
+  const n=LAYOUTS[$('layout').value].length, box=$('list');
+  box.innerHTML='';
+  panels.forEach((p,i)=>{
+    const d=document.createElement('div');d.className='panel'+(i>=n?' off':'');
+    d.innerHTML=`<div class="top"><img src="${p.th}" alt="Frame ${i+1}"><input type="number" step="0.1" min="0" value="${p.t.toFixed(1)}" aria-label="Time in seconds"><span class="hint">sec</span>
+    <button class="sm" data-a="up" title="Move up">↑</button><button class="sm" data-a="dn" title="Move down">↓</button><button class="sm" data-a="rm" title="Remove">✕</button></div>
+    <textarea aria-label="Caption">${p.text.replace(/</g,'&lt;')}</textarea>${i>=n?'<div class="hint">Not on this page layout.</div>':''}`;
+    d.querySelector('textarea').oninput=e=>{p.text=e.target.value;p.edited=true;render()};
+    d.querySelector('input').onchange=async e=>{
+      const t=+e.target.value;Object.assign(p,await grab(t),{t});
+      if(!p.edited)p.text=textAt(t);redraw();
+    };
+    d.querySelectorAll('button').forEach(b=>b.onclick=()=>{
+      const a=b.dataset.a;
+      if(a==='rm')panels.splice(i,1);
+      if(a==='up'&&i>0)[panels[i-1],panels[i]]=[panels[i],panels[i-1]];
+      if(a==='dn'&&i<panels.length-1)[panels[i+1],panels[i]]=[panels[i],panels[i+1]];
+      redraw();
+    });
+    box.appendChild(d);
+  });
+}
+const redraw=()=>{renderList();render()};
+
+/* ---------- compositing ---------- */
+const dot=document.createElement('canvas');dot.width=dot.height=10;
+{const d=dot.getContext('2d');d.fillStyle='#000';d.beginPath();d.arc(5,5,2.3,0,7);d.fill()}
+
+function wrap(t,mw){
+  const o=[];let l='';
+  t.split(' ').forEach(w=>{const n=l?l+' '+w:w;if(x.measureText(n).width>mw&&l){o.push(l);l=w}else l=n});
+  if(l)o.push(l);return o;
+}
+function caption(p,i,px,py,pw,ph){
+  const txt=$('caps').checked?p.text.toUpperCase():p.text;
+  let fs=Math.max(26,Math.min(64,pw*.07)),lines,pad;
+  for(;;){
+    pad=fs*.45;x.font=`${fs}px Bangers,Impact,sans-serif`;
+    lines=wrap(txt,pw*.8-pad*2);
+    if(lines.length*fs*1.1+pad*2<=ph*.45||fs<=18)break;fs-=2;
+  }
+  const bw=Math.max(...lines.map(l=>x.measureText(l).width))+pad*2, bh=lines.length*fs*1.1+pad*2;
+  const pos=$('pos').value, top=pos==='top'||(pos==='alt'&&i%2===0);
+  const bx=(pos==='alt'&&!top)?px+pw-bw-24:px+24, by=top?py+24:py+ph-bh-24;
+  const bub=$('style').value==='bub';
+  x.save();x.lineJoin='round';x.lineWidth=6;x.strokeStyle='#000';
+  x.beginPath();
+  if(bub)x.roundRect(bx,by,bw,bh,fs*.8);else x.rect(bx,by,bw,bh);
+  if(!bub){x.fillStyle='#000';x.fillRect(bx+9,by+9,bw,bh)}
+  x.fillStyle=bub?'#fff':'#ffd400';x.fill();x.stroke();
+  x.fillStyle='#111';x.textBaseline='top';x.textAlign='left';
+  lines.forEach((l,k)=>x.fillText(l,bx+pad,by+pad+k*fs*1.1+fs*.05));
+  x.restore();
+}
+function render(){
+  const W=1600,H=2200,M=50,G=30;
+  cv.width=W;cv.height=H;
+  x.fillStyle='#fff';x.fillRect(0,0,W,H);
+  LAYOUTS[$('layout').value].forEach((r,i)=>{
+    const px=M+r[0]*(W-2*M)+G/2, py=M+r[1]*(H-2*M)+G/2, pw=r[2]*(W-2*M)-G, ph=r[3]*(H-2*M)-G, p=panels[i];
+    x.save();x.beginPath();x.rect(px,py,pw,ph);x.clip();
+    if(p){
+      x.filter=$('punch').checked?'contrast(1.3) saturate(1.4)':'none';
+      const s=Math.max(pw/p.c.width,ph/p.c.height),w=p.c.width*s,h=p.c.height*s;
+      x.drawImage(p.c,px+(pw-w)/2,py+(ph-h)/2,w,h);
+      x.filter='none';
+      if($('half').checked){x.globalAlpha=.16;x.fillStyle=x.createPattern(dot,'repeat');x.fillRect(px,py,pw,ph);x.globalAlpha=1}
+    }else{x.fillStyle='#d7dbe2';x.fillRect(px,py,pw,ph)}
+    x.restore();
+    x.lineWidth=10;x.strokeStyle='#000';x.lineJoin='miter';x.strokeRect(px,py,pw,ph);
+    if(p&&p.text.trim())caption(p,i,px,py,pw,ph);
+  });
+}
+
+/* ---------- wiring ---------- */
+$('vf').onchange=e=>{
+  const f=e.target.files[0];if(!f)return;
+  V.src=URL.createObjectURL(f);
+  V.onloadedmetadata=()=>{$('auto').disabled=$('grabNow').disabled=false;$('status').textContent=`Video loaded (${Math.round(V.duration)}s). ${cues.length?cues.length+' caption cues.':'Now load captions.'}`};
+};
+$('sf').onchange=async e=>{
+  const f=e.target.files[0];if(!f)return;
+  cues=parseCaptions(await f.text());
+  $('status').textContent=cues.length?`${cues.length} caption cues loaded.`:'No cues found. Check the file is SRT or VTT.';
+};
+$('auto').onclick=async()=>{
+  const N=LAYOUTS[$('layout').value].length;
+  panels=[];$('auto').disabled=true;
+  const pool=cues.filter(c=>c.text.split(' ').length>=3);
+  for(let j=0;j<N;j++){
+    let t,text;
+    if(pool.length){const c=pool[Math.floor((j+.5)*pool.length/N)];t=(c.s+c.e)/2;text=textAt(t)}
+    else{t=(j+.5)*V.duration/N;text=''}
+    await addPanel(t,text);
+  }
+  $('auto').disabled=false;
+};
+$('grabNow').onclick=()=>addPanel(V.currentTime);
+$('clear').onclick=()=>{panels=[];redraw()};
+['layout','style','pos','caps','punch','half'].forEach(id=>$(id).onchange=redraw);
+$('dl').onclick=()=>cv.toBlob(b=>{const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='fotoromanza-page.png';a.click()});
+
+(document.fonts?document.fonts.load('40px Bangers').catch(()=>{}):Promise.resolve()).then(redraw);
+</script>
+</body>
+</html>
