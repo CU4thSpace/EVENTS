@@ -74,6 +74,8 @@ canvas#page{max-width:100%;max-height:calc(100vh - 40px);border:3px solid var(--
     <label><input type="checkbox" id="punch" checked> Punchy colour</label>
     <label><input type="checkbox" id="half" checked> Halftone</label>
   </div>
+  <label for="res">Page export size</label>
+  <select id="res"><option value="1">1× (1600×2200)</option><option value="2" selected>2× (3200×4400)</option><option value="3">3× (4800×6600)</option></select>
   <p><button id="dl" class="go">Download PNG</button></p>
 </aside>
 <main><canvas id="page"></canvas></main>
@@ -127,7 +129,7 @@ async function grab(t){
   t=Math.max(0,Math.min(t,(V.duration||t)-.05));
   V.pause();
   if(Math.abs(V.currentTime-t)>.01) await new Promise(r=>{V.addEventListener('seeked',r,{once:true});V.currentTime=t});
-  const w=Math.min(V.videoWidth,1280),h=Math.round(w*V.videoHeight/V.videoWidth);
+  const w=Math.min(V.videoWidth,1920),h=Math.round(w*V.videoHeight/V.videoWidth);
   const c=document.createElement('canvas');c.width=w;c.height=h;c.getContext('2d').drawImage(V,0,0,w,h);
   const th=document.createElement('canvas');th.width=72;th.height=Math.round(72*h/w);th.getContext('2d').drawImage(c,0,0,th.width,th.height);
   return {c,th:th.toDataURL('image/jpeg',.6)};
@@ -206,7 +208,8 @@ function caption(p,i,px,py,pw,ph){
 }
 function render(){
   const W=1600,H=2200,M=50,G=30;
-  cv.width=W;cv.height=H;
+  const S=+$('res').value;
+  cv.width=W*S;cv.height=H*S;x.setTransform(S,0,0,S,0,0);x.imageSmoothingQuality='high';
   x.fillStyle='#fff';x.fillRect(0,0,W,H);
   LAYOUTS[$('layout').value].forEach((r,i)=>{
     const px=M+r[0]*(W-2*M)+G/2, py=M+r[1]*(H-2*M)+G/2, pw=r[2]*(W-2*M)-G, ph=r[3]*(H-2*M)-G, p=panels[i];
@@ -250,6 +253,7 @@ $('auto').onclick=async()=>{
 $('grabNow').onclick=()=>addPanel(V.currentTime);
 $('clear').onclick=()=>{panels=[];redraw()};
 ['layout','style','pos','caps','punch','half'].forEach(id=>$(id).onchange=redraw);
+$('res').onchange=render;
 $('font').onchange=()=>{
   const f=`40px "${$('font').value}"`;
   (document.fonts?document.fonts.load(f).catch(()=>{}):Promise.resolve()).then(render);
