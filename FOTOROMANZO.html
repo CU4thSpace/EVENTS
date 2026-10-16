@@ -4,7 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>FOTOROMANZA!</title>
-<link href="https://fonts.googleapis.com/css2?family=Bangers&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bangers&family=Permanent+Marker&family=Oswald:wght@500&family=Special+Elite&family=Courier+Prime:wght@700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@500&display=swap" rel="stylesheet">
 <style>
 :root{--ink:#14141f;--paper:#e8ebef;--side:#fff;--yellow:#ffd400;--red:#e63946;--line:#c9cfd8}
 *{box-sizing:border-box}
@@ -59,6 +60,11 @@ canvas#page{max-width:100%;max-height:calc(100vh - 40px);border:3px solid var(--
   <select id="layout"></select>
   <label for="style">Caption style</label>
   <select id="style"><option value="nar">Narration box (yellow)</option><option value="bub">Bubble (white)</option></select>
+  <label for="font">Caption font</label>
+  <select id="font">
+    <option>Bangers</option><option>Permanent Marker</option><option>Oswald</option>
+    <option>Special Elite</option><option>Courier Prime</option><option>Google Sans</option>
+  </select>
   <label for="pos">Caption position</label>
   <select id="pos"><option value="alt">Alternate</option><option value="top">Top</option><option value="bot">Bottom</option></select>
   <div class="row">
@@ -169,7 +175,7 @@ function caption(p,i,px,py,pw,ph){
   const txt=$('caps').checked?p.text.toUpperCase():p.text;
   let fs=Math.max(26,Math.min(64,pw*.07)),lines,pad;
   for(;;){
-    pad=fs*.45;x.font=`${fs}px Bangers,Impact,sans-serif`;
+    pad=fs*.45;x.font=`${fs}px "${$('font').value}",Impact,sans-serif`;
     lines=wrap(txt,pw*.8-pad*2);
     if(lines.length*fs*1.1+pad*2<=ph*.45||fs<=18)break;fs-=2;
   }
@@ -232,6 +238,10 @@ $('auto').onclick=async()=>{
 $('grabNow').onclick=()=>addPanel(V.currentTime);
 $('clear').onclick=()=>{panels=[];redraw()};
 ['layout','style','pos','caps','punch','half'].forEach(id=>$(id).onchange=redraw);
+$('font').onchange=()=>{
+  const f=`40px "${$('font').value}"`;
+  (document.fonts?document.fonts.load(f).catch(()=>{}):Promise.resolve()).then(render);
+};
 $('dl').onclick=()=>cv.toBlob(b=>{const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='fotoromanza-page.png';a.click()});
 
 (document.fonts?document.fonts.load('40px Bangers').catch(()=>{}):Promise.resolve()).then(redraw);
