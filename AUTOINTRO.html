@@ -68,6 +68,7 @@
   <p>Hello everyone and welcome to Concordia University’s 4th Space.<br>Thank you for joining us for today's event:</p>
 
   <textarea class="field" rows="1" data-key="title" placeholder="Event title" aria-label="Event title"></textarea>
+  <textarea class="field" rows="1" data-key="description" placeholder="Event description" aria-label="Event description"></textarea>
   <textarea class="field" rows="1" data-key="notes1" placeholder="Other notes" aria-label="Other notes"></textarea>
 
   <p>We would like to begin by acknowledging that Concordia University is located on unceded Indigenous lands in Tiohtiàke / Montréal. We respect the continued connections with the past, present and future in our ongoing relationships with Indigenous and other peoples within the Montreal community.</p>
@@ -285,6 +286,14 @@
 
     sections = sections.filter(function(sec){ return !/^spectrum id$/i.test(sec.label); });
 
+    // The Description goes to its own box, so take it out of the credits list
+    var description = '';
+    sections = sections.filter(function(sec){
+      if (!/^description$/i.test(sec.label)) return true;
+      description = [sec.value].concat(sec.items).filter(Boolean).join('\n');
+      return false;
+    });
+
     // Speakers listed under their own heading on the page
     var speakers = [];
     doc.querySelectorAll('h2, h3').forEach(function(h){
@@ -318,7 +327,7 @@
       lines.push(value ? sec.label + ': ' + value : sec.label + ':');
       items.forEach(function(n){ lines.push(n); });
     });
-    return lines.join('\n');
+    return { description: description, credits: lines.join('\n') };
   }
 
   // Only overwrite a box if it is empty or still holds text this button put there
@@ -338,10 +347,11 @@
     setField('title', ev.title);
     save();
     say('Title filled. Looking up credits…', 4000);
-    return fetchText(ev.link).then(creditsText).then(function(text){
-      setField('speaker', text);
+    return fetchText(ev.link).then(creditsText).then(function(c){
+      setField('description', c.description);
+      setField('speaker', c.credits);
       save();
-      say(text ? 'Filled from the event page' : 'Title filled. No credits listed on the event page', 4000);
+      say((c.description || c.credits) ? 'Filled from the event page' : 'Title filled. No credits listed on the event page', 4000);
     }).catch(function(){
       say('Title filled. Could not load the credits', 4000);
     });
