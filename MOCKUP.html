@@ -4,7 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>4TH SPACE - Concordia University (mockup)</title>
+<link rel="shortcut icon" href="https://www.concordia.ca/etc/designs/concordia/favicon.ico">
+<link rel="icon" type="image/png" sizes="32x32" href="https://www.concordia.ca/etc/designs/concordia/clientlibs/img/favicons/favicon-32x32.png">
+<link rel="apple-touch-icon" sizes="180x180" href="https://www.concordia.ca/etc/designs/concordia/clientlibs/img/favicons/apple-touch-icon.png">
+<meta name="theme-color" content="#912338">
+<meta name="description" content="4th Space is Concordia University’s gateway into an immersive experience designed to bring knowledge and ideas to life.">
+<link rel="stylesheet" href="https://use.typekit.net/ewy3egs.css">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20,300..700,0..1,-25">
 <style>
 :root{--burg:#912338;--blue:#0072A8;--navy:#004085;--grey:#f0f0f0;--line:rgb(0 0 0 / 10%);box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 *{box-sizing:border-box}
@@ -15,6 +22,7 @@ a{color:inherit}
 /* header */
 .top{background:#fff;border-bottom:1px solid #e5e5e5}
 .top .w1200{display:flex;justify-content:space-between;align-items:center;height:64px}
+.logo img{height:40px;display:block}
 .logo{font-weight:800;color:var(--burg);font-size:22px;letter-spacing:.5px;text-decoration:none}
 .sub{background:var(--blue);color:#fff}
 .sub .row1{display:flex;justify-content:space-between;align-items:center;padding:14px 0}
@@ -26,10 +34,12 @@ a{color:inherit}
 .crumb{font-size:13px;padding:10px 0;color:#555}
 .crumb span{margin:0 6px}
 /* hero */
-.hero{background:var(--blue);color:#fff;text-align:center;min-height:460px;display:flex;align-items:center;justify-content:center;padding:40px 16px}
-.hero h1{margin:0 0 20px;font-size:72px;line-height:1;font-weight:800;letter-spacing:2px}
+.hero{position:relative;overflow:hidden;background:var(--blue);color:#fff;text-align:center;min-height:460px;display:flex;align-items:center;justify-content:center;padding:40px 16px}
+.hero video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.hero>div{position:relative;z-index:1}
+.hero h1{font-family:GillSansMTProBold,Inter,sans-serif;margin:0 0 20px;font-size:72px;line-height:1;font-weight:800;letter-spacing:2px}
 .hero h1 sup{font-size:58%;vertical-align:baseline;position:relative;top:-.45em;line-height:0}
-.hero p{margin:0;font-size:24px;font-weight:700}
+.hero p{margin:0;font-size:24px;font-family:GillSansMTProBold,Inter,sans-serif}
 /* sections */
 .s{padding:60px 0}
 .s.tight{padding:40px 0 20px}
@@ -37,7 +47,7 @@ a{color:inherit}
 .black{background:#000;color:#fff}
 h2.t{margin:0 0 20px;font-size:32px;font-weight:700;line-height:1.2}
 .social{display:flex;justify-content:center;gap:18px;flex-wrap:wrap;padding:0;margin:0;list-style:none}
-.social li{width:44px;height:44px;border-radius:50%;background:var(--burg);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700}
+.social li img{width:44px;height:44px;display:block}
 /* cards (identical for events and news) */
 .cards{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin:20px 0}
 @media(max-width:900px){.cards{grid-template-columns:repeat(2,1fr)}}
@@ -45,11 +55,12 @@ h2.t{margin:0 0 20px;font-size:32px;font-weight:700;line-height:1.2}
 .c-card{display:flex}
 .c-card__container{width:100%;background:#fff;border-radius:8px;border:1px solid var(--line);overflow:hidden}
 .c-card__container a{display:block;text-decoration:none;height:100%}
+.media img{width:100%;height:100%;object-fit:cover;display:block}
 .media{width:100%;aspect-ratio:16/9;background:#c9c9c9 linear-gradient(135deg,#d4d4d4,#9d9d9d);position:relative}
 .media.e1{background:linear-gradient(135deg,var(--burg),#5c1423)}
 .media.e2{background:linear-gradient(135deg,var(--blue),#00476b)}
 .media.e3{background:linear-gradient(135deg,#444,#161616)}
-.media i{position:absolute;left:10px;bottom:10px;font-style:normal;background:#fff;border-radius:4px;padding:3px 9px;text-align:center;line-height:1.1;color:#000}
+.media i{z-index:1;position:absolute;left:10px;bottom:10px;font-style:normal;background:#fff;border-radius:4px;padding:3px 9px;text-align:center;line-height:1.1;color:#000}
 .media i b{display:block;font-size:20px}
 .media i span{font-size:11px;font-weight:700;color:var(--burg)}
 .c-card__text-block{padding:15px}
@@ -65,9 +76,9 @@ h2.t{margin:0 0 20px;font-size:32px;font-weight:700;line-height:1.2}
 /* recent events */
 .vids{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
 @media(max-width:767px){.vids{grid-template-columns:1fr}}
-.vid{background:#000;aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;color:#fff;font-size:34px;border-radius:2px}
+.vid iframe{width:100%;height:300px;border:0;display:block}
 .vidc{text-align:center}
-.pod{background:#2b2b2b;height:300px;display:flex;align-items:center;justify-content:center;color:#ff5500;font-weight:700}
+.pod iframe{width:100%;height:300px;border:0;display:block}
 /* footer */
 .fpre{border-top:1px solid #e5e5e5;padding:50px 0 5px}
 footer{background:#000;color:#fff;font-size:14px}
@@ -80,14 +91,15 @@ footer a:hover{text-decoration:underline}
 .ack{border:1px solid #b37e88;padding:8px 12px}
 .deep{border-top:1px solid #333;padding:24px 0;font-size:13px}
 .deep .l{display:flex;flex-wrap:wrap;gap:4px 12px;margin:8px 0}
+.dlogo{margin-top:16px}
 .mock{background:#fff8d6;color:#222;text-align:center;font-size:13px;padding:8px 12px}
 </style>
 </head>
 <body>
-<div class="mock">Mockup: “Upcoming Events” restyled with the same card markup/styling as “In the News”. Image areas are placeholders.</div>
+<div class="mock">Mockup: “Upcoming Events” restyled with the same card markup/styling as “In the News”. Upcoming Events are loaded from the 4th Space RSS feed (first three items); the cards in the HTML are a fallback.</div>
 
 <header>
-  <div class="top"><div class="w1200"><a class="logo" href="#">CONCORDIA UNIVERSITY</a></div></div>
+  <div class="top"><div class="w1200"><a class="logo" href="https://www.concordia.ca"><img src="https://www.concordia.ca/etc/designs/concordia/clientlibs/img/logo-concordia-university.png" alt="Concordia University"></a></div></div>
   <div class="sub"><div class="w1200">
     <div class="row1"><h2><a href="#">4TH SPACE</a></h2><a href="#" style="text-decoration:none">fr</a></div>
     <nav class="nav"><a href="#">About 4TH SPACE</a><a href="#">Calendar</a><a href="#">News</a><a href="#">Resources</a><a href="#">Contact</a></nav>
@@ -96,69 +108,69 @@ footer a:hover{text-decoration:underline}
 </header>
 
 <main>
-  <div class="hero"><div><h1>4<sup>TH</sup> SPACE</h1><p>Your window to research and learning activity at Concordia</p></div></div>
+  <div class="hero"><video muted loop autoplay playsinline poster="https://pegasus.concordia.ca/Flv_Content/4thspace/2026A.jpg"><source type="video/mp4" src="https://pegasus.concordia.ca/Flv_Content/4thspace/2026A.mp4"></video><div><h1>4<sup>TH</sup> SPACE</h1><p>Your window to research and learning activity at Concordia</p></div></div>
 
-  <div class="s tight"><div class="w940"><ul class="social"><li>f</li><li>X</li><li>IG</li><li>YT</li><li>in</li></ul></div></div>
+  <div class="s tight"><div class="w940"><ul class="social"><li><a href="https://www.facebook.com/CU4thSpace" target="_blank" title="Facebook"><img src="https://www.concordia.ca/etc/designs/concordia/clientlibs/img/icons/social-media/facebook-burgundy.png" alt="Facebook"></a></li><li><a href="https://twitter.com/cu4thspace" target="_blank" title="X"><img src="https://www.concordia.ca/etc/designs/concordia/clientlibs/img/icons/social-media/twitter-burgundy.png" alt="X"></a></li><li><a href="https://www.instagram.com/cu4thspace/" target="_blank" title="Instagram"><img src="https://www.concordia.ca/etc/designs/concordia/clientlibs/img/icons/social-media/instagram-burgundy.png" alt="Instagram"></a></li><li><a href="https://www.youtube.com/channel/UCEOJMoIqrd5vJDPIWZz7s_Q" target="_blank" title="YouTube"><img src="https://www.concordia.ca/etc/designs/concordia/clientlibs/img/icons/social-media/youtube-burgundy.png" alt="YouTube"></a></li><li><a href="https://www.linkedin.com/in/4th-space-concordia-university-b7894b241/" target="_blank" title="LinkedIn"><img src="https://www.concordia.ca/etc/designs/concordia/clientlibs/img/icons/social-media/linkedin-burgundy.png" alt="LinkedIn"></a></li></ul></div></div>
 
   <!-- UPCOMING EVENTS: now uses news card styling -->
   <div class="s grey"><div class="w940">
     <h2 class="t">Upcoming Events</h2>
-    <div class="cards">
-      <div class="c-card"><div class="c-card__container"><a href="#">
-        <div class="media e1"><i><span>OCT</span><b>20</b></i></div>
+    <div class="cards" id="events">
+      <div class="c-card"><div class="c-card__container"><a href="https://www.concordia.ca/cuevents/offices/provost/fourth-space/2026/10/20/women-leading-sustainability.html">
+        <div class="media"><img src="https://www.concordia.ca/content/dam/concordia/next-gen/4th-space/images/women-sustainability-film.jpg" alt=""><i><span>OCT</span><b>20</b></i></div>
         <div class="c-card__text-block">
           <p class="c-card__title">Women Leading Sustainability</p>
           <p class="c-card__subtitle">Film Screening and Q&amp;A</p>
           <div class="c-card__date">Today, 4 p.m. – 6 p.m.</div>
         </div></a></div></div>
-      <div class="c-card"><div class="c-card__container"><a href="#">
-        <div class="media e2"><i><span>OCT</span><b>21</b></i></div>
+      <div class="c-card"><div class="c-card__container"><a href="https://www.concordia.ca/cuevents/offices/provost/fourth-space/2026/10/21/history-and-legacy-world-soundscape-project.html">
+        <div class="media"><img src="https://www.concordia.ca/content/dam/concordia/next-gen/4th-space/images/4SP_vansound_copy.jpg" alt=""><i><span>OCT</span><b>21</b></i></div>
         <div class="c-card__text-block">
           <p class="c-card__title">The History and Legacy of the World Soundscape Project</p>
           <p class="c-card__subtitle">with Dr. Barry Truax</p>
           <div class="c-card__date">Tomorrow, 1 p.m. – 3 p.m.</div>
         </div></a></div></div>
-      <div class="c-card"><div class="c-card__container"><a href="#">
-        <div class="media e3"><i><span>OCT</span><b>22</b></i></div>
+      <div class="c-card"><div class="c-card__container"><a href="https://www.concordia.ca/cuevents/offices/provost/fourth-space/2026/10/22/oral-history-off-the-record.html">
+        <div class="media"><img src="https://www.concordia.ca/content/dam/concordia/next-gen/4th-space/images/Podcast-cover.png/jcr:content/renditions/cq5dam.web.1920.1920.png" alt=""><i><span>OCT</span><b>22</b></i></div>
         <div class="c-card__text-block">
           <p class="c-card__title">Oral History Off the Record</p>
           <p class="c-card__subtitle">Podcast Launch + Live Recording</p>
           <div class="c-card__date">Thursday, 11:30 a.m. – 2 p.m.</div>
         </div></a></div></div>
     </div>
-    <div class="center"><a class="btn" href="#">See all events</a></div>
+    <div class="center"><a class="btn" href="https://www.concordia.ca/next-gen/4th-space/programming.html">See all events</a></div>
   </div></div>
 
   <div class="s"><div class="w940">
     <h2 class="t">Recent Events</h2>
     <div class="vids">
-      <div class="vidc"><div class="vid">▶</div><a class="btn btn-simple" href="#">Game Design and Education</a></div>
-      <div class="vidc"><div class="vid">▶</div><a class="btn btn-simple" href="#">Society and Social Justice</a></div>
-      <div class="vidc"><div class="vid">▶</div><a class="btn btn-simple" href="#">Climate and Sustainability</a></div>
-      <div class="vidc"><div class="vid">▶</div><a class="btn btn-simple" href="#">Poetry, Music and Performance</a></div>
-      <div class="vidc"><div class="vid">▶</div><a class="btn btn-simple" href="#">Book Launches and Discussions</a></div>
-      <div class="vidc"><div class="vid">▶</div><a class="btn btn-simple" href="#">A Closer Look</a></div>
+      <div class="vidc"><div class="vid"><iframe src="https://www.youtube.com/embed/videoseries?list=PL5pdApUWmJ1zECo7rgyc61WrGDfDaO6Lf" title="Game Design and Education" allowfullscreen></iframe></div><a class="btn btn-simple" href="https://youtube.com/playlist?list=PL5pdApUWmJ1zECo7rgyc61WrGDfDaO6Lf" target="_blank">Game Design and Education</a></div>
+      <div class="vidc"><div class="vid"><iframe src="https://www.youtube.com/embed/videoseries?list=PL5pdApUWmJ1y8vETqS-oZTMIETUXPSkUH" title="Society and Social Justice" allowfullscreen></iframe></div><a class="btn btn-simple" href="https://youtube.com/playlist?list=PL5pdApUWmJ1y8vETqS-oZTMIETUXPSkUH" target="_blank">Society and Social Justice</a></div>
+      <div class="vidc"><div class="vid"><iframe src="https://www.youtube.com/embed/videoseries?list=PL5pdApUWmJ1y6UNkCjKt7TmbrdkeF5NNZ" title="Climate and Sustainability" allowfullscreen></iframe></div><a class="btn btn-simple" href="https://youtube.com/playlist?list=PL5pdApUWmJ1y6UNkCjKt7TmbrdkeF5NNZ" target="_blank">Climate and Sustainability</a></div>
+      <div class="vidc"><div class="vid"><iframe src="https://www.youtube.com/embed/videoseries?list=PL5pdApUWmJ1yXtdSHLLKaX0pXvtaARlee" title="Poetry, Music and Performance" allowfullscreen></iframe></div><a class="btn btn-simple" href="https://youtube.com/playlist?list=PL5pdApUWmJ1yXtdSHLLKaX0pXvtaARlee" target="_blank">Poetry, Music and Performance</a></div>
+      <div class="vidc"><div class="vid"><iframe src="https://www.youtube.com/embed/videoseries?list=PL5pdApUWmJ1ybPma1IK61PQS-i54coQ-F" title="Book Launches and Discussions" allowfullscreen></iframe></div><a class="btn btn-simple" href="https://youtube.com/playlist?list=PL5pdApUWmJ1ybPma1IK61PQS-i54coQ-F" target="_blank">Book Launches and Discussions</a></div>
+      <div class="vidc"><div class="vid"><iframe src="https://www.youtube.com/embed/videoseries?list=PL5pdApUWmJ1zZNNMvE4I2QBfepP9cMLPS" title="A Closer Look" allowfullscreen></iframe></div><a class="btn btn-simple" href="https://youtube.com/playlist?list=PL5pdApUWmJ1zZNNMvE4I2QBfepP9cMLPS" target="_blank">A Closer Look</a></div>
     </div>
   </div></div>
 
   <div class="s black"><div class="w940">
     <h2 class="t" style="color:#fff">Our Podcast</h2>
-    <div class="pod">SoundCloud player</div>
+    <div class="pod"><iframe scrolling="no" allow="autoplay; encrypted-media" src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/playlists/soundcloud%253Aplaylists%253A2237104220&amp;color=%23ff5500&amp;auto_play=false&amp;hide_related=false&amp;show_comments=false&amp;show_user=true&amp;show_reposts=false&amp;show_teaser=true"></iframe></div>
   </div></div>
 
   <div class="s" style="padding-bottom:40px"><div class="w940">
     <h2 class="t">In the News</h2>
     <div class="cards">
-      <div class="c-card"><div class="c-card__container"><a href="#"><div class="media"></div><div class="c-card__text-block"><p class="c-card__title">Concordia grad students shine at the 2026 Three Minute Thesis competition</p><div class="c-card__date">April 23, 2026</div></div></a></div></div>
-      <div class="c-card"><div class="c-card__container"><a href="#"><div class="media"></div><div class="c-card__text-block"><p class="c-card__title">AI expert-in-residence initiative helps artists shape the future of creative work</p><div class="c-card__date">February 18, 2026</div></div></a></div></div>
-      <div class="c-card"><div class="c-card__container"><a href="#"><div class="media"></div><div class="c-card__text-block"><p class="c-card__title">Earth Day celebration shines a light on campus biodiversity</p><div class="c-card__date">April 7, 2025</div></div></a></div></div>
-      <div class="c-card"><div class="c-card__container"><a href="#"><div class="media"></div><div class="c-card__text-block"><p class="c-card__title">Meet the winners of Concordia’s 2025 Three Minute Thesis Competition</p><div class="c-card__date">March 25, 2025</div></div></a></div></div>
+      <div class="c-card"><div class="c-card__container"><a href="https://www.concordia.ca/cunews/main/stories/2026/04/23/concordia-grad-students-shine-at-the-2026-three-minute-thesis-competition.html"><div class="media"><img src="https://www.concordia.ca/cunews/main/stories/2026/04/23/concordia-grad-students-shine-at-the-2026-three-minute-thesis-competition.img.png/1777405416358.jpg" alt=""></div><div class="c-card__text-block"><p class="c-card__title">Concordia grad students shine at the 2026 Three Minute Thesis competition</p><div class="c-card__date">April 23, 2026</div></div></a></div></div>
+      <div class="c-card"><div class="c-card__container"><a href="https://www.concordia.ca/cunews/finearts/2026/02/18/ai-expert-in-residence-initiative-helps-artists-shape-the-future.html"><div class="media"><img src="https://www.concordia.ca/cunews/finearts/2026/02/18/ai-expert-in-residence-initiative-helps-artists-shape-the-future.img.png/1771962650293.png" alt=""></div><div class="c-card__text-block"><p class="c-card__title">AI expert-in-residence initiative helps artists shape the future of creative work</p><div class="c-card__date">February 18, 2026</div></div></a></div></div>
+      <div class="c-card"><div class="c-card__container"><a href="https://www.concordia.ca/cunews/main/stories/2025/04/07/earth-day-celebration-shines-a-light-on-campus-biodiversity.html"><div class="media"><img src="https://www.concordia.ca/cunews/main/stories/2025/04/07/earth-day-celebration-shines-a-light-on-campus-biodiversity.img.png/1744137926537.jpg" alt=""></div><div class="c-card__text-block"><p class="c-card__title">Earth Day celebration shines a light on campus biodiversity</p><div class="c-card__date">April 7, 2025</div></div></a></div></div>
+      <div class="c-card"><div class="c-card__container"><a href="https://www.concordia.ca/news/stories/2025/03/25/meet-the-winners-of-concordia-s-2025-three-minute-thesis-competition.html"><div class="media"><img src="https://www.concordia.ca/news/stories/2025/03/25/meet-the-winners-of-concordia-s-2025-three-minute-thesis-competition.img.png/1743624200302.jpg" alt=""></div><div class="c-card__text-block"><p class="c-card__title">Meet the winners of Concordia’s 2025 Three Minute Thesis Competition</p><div class="c-card__date">March 25, 2025</div></div></a></div></div>
     </div>
     <div class="center"><a class="btn" href="#">More news stories</a></div>
   </div></div>
 </main>
 
-<div class="fpre"><div class="w940"><ul class="social"><li>f</li><li>X</li><li>IG</li><li>YT</li><li>in</li></ul></div></div>
+<div class="fpre"><div class="w940"><ul class="social"><li><a href="https://www.facebook.com/CU4thSpace" target="_blank" title="Facebook"><img src="https://www.concordia.ca/etc/designs/concordia/clientlibs/img/icons/social-media/facebook-burgundy.png" alt="Facebook"></a></li><li><a href="https://twitter.com/cu4thspace" target="_blank" title="X"><img src="https://www.concordia.ca/etc/designs/concordia/clientlibs/img/icons/social-media/twitter-burgundy.png" alt="X"></a></li><li><a href="https://www.instagram.com/cu4thspace/" target="_blank" title="Instagram"><img src="https://www.concordia.ca/etc/designs/concordia/clientlibs/img/icons/social-media/instagram-burgundy.png" alt="Instagram"></a></li><li><a href="https://www.youtube.com/channel/UCEOJMoIqrd5vJDPIWZz7s_Q" target="_blank" title="YouTube"><img src="https://www.concordia.ca/etc/designs/concordia/clientlibs/img/icons/social-media/youtube-burgundy.png" alt="YouTube"></a></li><li><a href="https://www.linkedin.com/in/4th-space-concordia-university-b7894b241/" target="_blank" title="LinkedIn"><img src="https://www.concordia.ca/etc/designs/concordia/clientlibs/img/icons/social-media/linkedin-burgundy.png" alt="LinkedIn"></a></li></ul></div></div>
 <footer>
   <div class="w1200">
     <div class="fmain">
@@ -172,7 +184,47 @@ footer a:hover{text-decoration:underline}
     Central <a href="#">514-848-2424</a> | Emergency <a href="#">514-848-3717</a>
     <div class="l"><a href="#">Safety &amp; prevention</a>|<a href="#">Accessibility</a>|<a href="#">Privacy</a>|<a href="#">Terms</a>|<a href="#">Cookie settings</a>|<a href="#">Contact us</a>|<a href="#">Site feedback</a></div>
     © Concordia University. Montreal, QC, Canada
+    <div class="dlogo"><img src="https://www.concordia.ca/etc/designs/concordia/clientlibs/img/logo-concordia-wordmark.svg" alt="Concordia University" width="175"></div>
   </div></div>
 </footer>
+<script>
+// Upcoming Events: pull the first 3 items from the 4th Space RSS feed.
+// If the fetch fails (e.g. CORS when not hosted on concordia.ca), the static cards above stay in place.
+(function(){
+  var FEED="https://www.concordia.ca/content/concordia/en/next-gen/4th-space/programming/RSSCAL/_jcr_content/content-main/grid_container_671899525/grid-container-parsys/events_list.xml";
+  var DAYS={Mon:"Monday",Tue:"Tuesday",Wed:"Wednesday",Thu:"Thursday",Fri:"Friday",Sat:"Saturday",Sun:"Sunday"};
+  var MON={Jan:0,Feb:1,Mar:2,Apr:3,May:4,Jun:5,Jul:6,Aug:7,Sep:8,Oct:9,Nov:10,Dec:11};
+  function esc(t){var d=document.createElement("div");d.textContent=t||"";return d.innerHTML;}
+  function when(pub,p){
+    // pubDate e.g. "Tue, 20 Oct 2026 16:00:00 -0400" -> read the date as written (no timezone shift)
+    var m=pub.match(/^(\w{3}), (\d{1,2}) (\w{3}) (\d{4})/); if(!m) return p;
+    var ev=new Date(+m[4],MON[m[3]],+m[2]), now=new Date(); now.setHours(0,0,0,0);
+    var diff=Math.round((ev-now)/864e5);
+    var lead=diff===0?"Today":diff===1?"Tomorrow":diff>1&&diff<7?DAYS[m[1]]:m[3]+" "+m[2];
+    var t=(p.match(/\d{4},\s*(.*)$/)||[,""])[1].replace(" - "," \u2013 ");
+    return lead+(t?", "+t:"");
+  }
+  function card(it){
+    var tmp=document.createElement("div"); tmp.innerHTML=it.desc;
+    var sub=tmp.querySelector("h2"), img=tmp.querySelector("img"), p=tmp.querySelector("p");
+    var m=it.pub.match(/^\w{3}, (\d{1,2}) (\w{3})/);
+    var badge=m?'<i><span>'+m[2].toUpperCase()+'</span><b>'+m[1]+'</b></i>':"";
+    var media=img?'<img src="'+esc(img.getAttribute("src"))+'" alt="">':"";
+    return '<div class="c-card"><div class="c-card__container"><a href="'+esc(it.link.replace(/^http:/,"https:"))+'">'+
+      '<div class="media">'+media+badge+'</div><div class="c-card__text-block">'+
+      '<p class="c-card__title">'+esc(it.title)+'</p>'+
+      (sub?'<p class="c-card__subtitle">'+esc(sub.textContent)+'</p>':"")+
+      '<div class="c-card__date">'+esc(when(it.pub,p?p.textContent:""))+'</div></div></a></div></div>';
+  }
+  fetch(FEED).then(function(r){if(!r.ok)throw 0;return r.text();}).then(function(x){
+    var doc=new DOMParser().parseFromString(x,"text/xml");
+    var items=[].slice.call(doc.querySelectorAll("item")).slice(0,3).map(function(i){
+      var g=function(n){var e=i.querySelector(n);return e?e.textContent:"";};
+      return {title:g("title"),link:g("link"),desc:g("description"),pub:g("pubDate")};
+    });
+    if(items.length) document.getElementById("events").innerHTML=items.map(card).join("");
+  }).catch(function(){});
+})();
+</script>
 </body>
 </html>
