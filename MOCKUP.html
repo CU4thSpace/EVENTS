@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>4TH SPACE - Concordia University (mockup)</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap">
+<style>
+:root{--burg:#912338;--blue:#0072A8;--navy:#004085;--grey:#f0f0f0;--line:rgb(0 0 0 / 10%);box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:#fff;color:#000;font:16px/1.5 Inter,"Helvetica Neue",Arial,sans-serif}
+a{color:inherit}
+.w1200{max-width:1200px;margin:0 auto;padding:0 15px}
+.w940{max-width:940px;margin:0 auto;padding:0 15px}
+/* header */
+.top{background:#fff;border-bottom:1px solid #e5e5e5}
+.top .w1200{display:flex;justify-content:space-between;align-items:center;height:64px}
+.logo{font-weight:800;color:var(--burg);font-size:22px;letter-spacing:.5px;text-decoration:none}
+.sub{background:var(--blue);color:#fff}
+.sub .row1{display:flex;justify-content:space-between;align-items:center;padding:14px 0}
+.sub h2{margin:0;font-size:20px;font-weight:700;letter-spacing:1px}
+.sub h2 a{text-decoration:none}
+.nav{display:flex;flex-wrap:wrap;gap:4px 24px;padding-bottom:12px;font-size:15px}
+.nav a{text-decoration:none;padding:4px 0}
+.nav a:hover{text-decoration:underline}
+.crumb{font-size:13px;padding:10px 0;color:#555}
+.crumb span{margin:0 6px}
+/* hero */
+.hero{background:var(--blue);color:#fff;text-align:center;min-height:460px;display:flex;align-items:center;justify-content:center;padding:40px 16px}
+.hero h1{margin:0 0 20px;font-size:72px;line-height:1;font-weight:800;letter-spacing:2px}
+.hero h1 sup{font-size:58%;vertical-align:baseline;position:relative;top:-.45em;line-height:0}
+.hero p{margin:0;font-size:24px;font-weight:700}
+/* sections */
+.s{padding:60px 0}
+.s.tight{padding:40px 0 20px}
+.grey{background:var(--grey)}
+.black{background:#000;color:#fff}
+h2.t{margin:0 0 20px;font-size:32px;font-weight:700;line-height:1.2}
+.social{display:flex;justify-content:center;gap:18px;flex-wrap:wrap;padding:0;margin:0;list-style:none}
+.social li{width:44px;height:44px;border-radius:50%;background:var(--burg);color:#fff;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700}
+/* cards (identical for events and news) */
+.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin:20px 0}
+@media(max-width:900px){.cards{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:520px){.cards{grid-template-columns:1fr}}
+.c-card{display:flex}
+.c-card__container{width:100%;background:#fff;border-radius:8px;border:1px solid var(--line);overflow:hidden}
+.c-card__container a{display:block;text-decoration:none;height:100%}
+.media{width:100%;aspect-ratio:16/9;background:#c9c9c9 linear-gradient(135deg,#d4d4d4,#9d9d9d);position:relative}
+.media.e1{background:linear-gradient(135deg,var(--burg),#5c1423)}
+.media.e2{background:linear-gradient(135deg,var(--blue),#00476b)}
+.media.e3{background:linear-gradient(135deg,#444,#161616)}
+.media i{position:absolute;left:10px;bottom:10px;font-style:normal;background:#fff;border-radius:4px;padding:3px 9px;text-align:center;line-height:1.1;color:#000}
+.media i b{display:block;font-size:20px}
+.media i span{font-size:11px;font-weight:700;color:var(--burg)}
+.c-card__text-block{padding:15px}
+.c-card__title{margin:0 0 8px;font-size:16px;font-weight:700;line-height:1.2;color:#000}
+.c-card__subtitle{margin:0 0 8px;font-size:14px;font-weight:600;line-height:1.2;color:#000}
+.c-card__date{font-size:13px;line-height:1;color:#000}
+/* buttons */
+.center{text-align:center}
+.btn{display:inline-block;padding:10px 24px;border:2px solid #000;color:#000;background:transparent;font-weight:600;text-decoration:none;border-radius:4px}
+.btn:hover{background:#000;color:#fff}
+.btn-simple{border:0;color:var(--burg);padding:0 0 4px;margin:10px 0 30px;font-weight:600;border-bottom:2px solid var(--burg);border-radius:0}
+.btn-simple:hover{background:transparent;color:#000}
+/* recent events */
+.vids{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+@media(max-width:767px){.vids{grid-template-columns:1fr}}
+.vid{background:#000;aspect-ratio:16/9;display:flex;align-items:center;justify-content:center;color:#fff;font-size:34px;border-radius:2px}
+.vidc{text-align:center}
+.pod{background:#2b2b2b;height:300px;display:flex;align-items:center;justify-content:center;color:#ff5500;font-weight:700}
+/* footer */
+.fpre{border-top:1px solid #e5e5e5;padding:50px 0 5px}
+footer{background:#000;color:#fff;font-size:14px}
+.fmain{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;padding:40px 0 50px}
+@media(max-width:767px){.fmain{grid-template-columns:1fr}}
+footer h2{font-size:18px;font-weight:700;line-height:32px;margin:0 0 8px;color:#fff}
+footer ul{list-style:none;margin:0;padding:0}
+footer a{text-decoration:none}
+footer a:hover{text-decoration:underline}
+.ack{border:1px solid #b37e88;padding:8px 12px}
+.deep{border-top:1px solid #333;padding:24px 0;font-size:13px}
+.deep .l{display:flex;flex-wrap:wrap;gap:4px 12px;margin:8px 0}
+.mock{background:#fff8d6;color:#222;text-align:center;font-size:13px;padding:8px 12px}
+</style>
+</head>
+<body>
+<div class="mock">Mockup: “Upcoming Events” restyled with the same card markup/styling as “In the News”. Image areas are placeholders.</div>
+
+<header>
+  <div class="top"><div class="w1200"><a class="logo" href="#">CONCORDIA UNIVERSITY</a></div></div>
+  <div class="sub"><div class="w1200">
+    <div class="row1"><h2><a href="#">4TH SPACE</a></h2><a href="#" style="text-decoration:none">fr</a></div>
+    <nav class="nav"><a href="#">About 4TH SPACE</a><a href="#">Calendar</a><a href="#">News</a><a href="#">Resources</a><a href="#">Contact</a></nav>
+  </div></div>
+  <div class="w1200 crumb">Concordia University<span>›</span>Next-Generation<span>›</span>4TH SPACE</div>
+</header>
+
+<main>
+  <div class="hero"><div><h1>4<sup>TH</sup> SPACE</h1><p>Your window to research and learning activity at Concordia</p></div></div>
+
+  <div class="s tight"><div class="w940"><ul class="social"><li>f</li><li>X</li><li>IG</li><li>YT</li><li>in</li></ul></div></div>
+
+  <!-- UPCOMING EVENTS: now uses news card styling -->
+  <div class="s grey"><div class="w940">
+    <h2 class="t">Upcoming Events</h2>
+    <div class="cards">
+      <div class="c-card"><div class="c-card__container"><a href="#">
+        <div class="media e1"><i><span>OCT</span><b>20</b></i></div>
+        <div class="c-card__text-block">
+          <p class="c-card__title">Women Leading Sustainability</p>
+          <p class="c-card__subtitle">Film Screening and Q&amp;A</p>
+          <div class="c-card__date">Today, 4 p.m. – 6 p.m.</div>
+        </div></a></div></div>
+      <div class="c-card"><div class="c-card__container"><a href="#">
+        <div class="media e2"><i><span>OCT</span><b>21</b></i></div>
+        <div class="c-card__text-block">
+          <p class="c-card__title">The History and Legacy of the World Soundscape Project</p>
+          <p class="c-card__subtitle">with Dr. Barry Truax</p>
+          <div class="c-card__date">Tomorrow, 1 p.m. – 3 p.m.</div>
+        </div></a></div></div>
+      <div class="c-card"><div class="c-card__container"><a href="#">
+        <div class="media e3"><i><span>OCT</span><b>22</b></i></div>
+        <div class="c-card__text-block">
+          <p class="c-card__title">Oral History Off the Record</p>
+          <p class="c-card__subtitle">Podcast Launch + Live Recording</p>
+          <div class="c-card__date">Thursday, 11:30 a.m. – 2 p.m.</div>
+        </div></a></div></div>
+    </div>
+    <div class="center"><a class="btn" href="#">See all events</a></div>
+  </div></div>
+
+  <div class="s"><div class="w940">
+    <h2 class="t">Recent Events</h2>
+    <div class="vids">
+      <div class="vidc"><div class="vid">▶</div><a class="btn btn-simple" href="#">Game Design and Education</a></div>
+      <div class="vidc"><div class="vid">▶</div><a class="btn btn-simple" href="#">Society and Social Justice</a></div>
+      <div class="vidc"><div class="vid">▶</div><a class="btn btn-simple" href="#">Climate and Sustainability</a></div>
+      <div class="vidc"><div class="vid">▶</div><a class="btn btn-simple" href="#">Poetry, Music and Performance</a></div>
+      <div class="vidc"><div class="vid">▶</div><a class="btn btn-simple" href="#">Book Launches and Discussions</a></div>
+      <div class="vidc"><div class="vid">▶</div><a class="btn btn-simple" href="#">A Closer Look</a></div>
+    </div>
+  </div></div>
+
+  <div class="s black"><div class="w940">
+    <h2 class="t" style="color:#fff">Our Podcast</h2>
+    <div class="pod">SoundCloud player</div>
+  </div></div>
+
+  <div class="s" style="padding-bottom:40px"><div class="w940">
+    <h2 class="t">In the News</h2>
+    <div class="cards">
+      <div class="c-card"><div class="c-card__container"><a href="#"><div class="media"></div><div class="c-card__text-block"><p class="c-card__title">Concordia grad students shine at the 2026 Three Minute Thesis competition</p><div class="c-card__date">April 23, 2026</div></div></a></div></div>
+      <div class="c-card"><div class="c-card__container"><a href="#"><div class="media"></div><div class="c-card__text-block"><p class="c-card__title">AI expert-in-residence initiative helps artists shape the future of creative work</p><div class="c-card__date">February 18, 2026</div></div></a></div></div>
+      <div class="c-card"><div class="c-card__container"><a href="#"><div class="media"></div><div class="c-card__text-block"><p class="c-card__title">Earth Day celebration shines a light on campus biodiversity</p><div class="c-card__date">April 7, 2025</div></div></a></div></div>
+      <div class="c-card"><div class="c-card__container"><a href="#"><div class="media"></div><div class="c-card__text-block"><p class="c-card__title">Meet the winners of Concordia’s 2025 Three Minute Thesis Competition</p><div class="c-card__date">March 25, 2025</div></div></a></div></div>
+    </div>
+    <div class="center"><a class="btn" href="#">More news stories</a></div>
+  </div></div>
+</main>
+
+<div class="fpre"><div class="w940"><ul class="social"><li>f</li><li>X</li><li>IG</li><li>YT</li><li>in</li></ul></div></div>
+<footer>
+  <div class="w1200">
+    <div class="fmain">
+      <div><h2>4TH SPACE</h2><ul><li><a href="#">About 4TH SPACE</a></li><li><a href="#">Calendar</a></li><li><a href="#">News</a></li><li><a href="#">Resources</a></li><li><a href="#">Contact</a></li></ul></div>
+      <div><h2>Contact us</h2><p><a href="#">info.4@concordia.ca</a><br>514-848-2424, ext. 5445</p><p><a href="#">Have an idea? Let us know!</a></p></div>
+      <div><h2>Visit us</h2><p>Room LB-103<br>1400 De Maisonneuve Blvd. W.<br><a href="#">J.W. McConnell Building (LB)</a><br>Monday-Friday, 10 a.m.-6 p.m.</p><h2>Mailing address</h2><p>4TH SPACE<br>Concordia University<br>1455 De Maisonneuve Blvd. W.<br>Montreal, QC H3G 1M8<br>CANADA</p></div>
+      <div><div class="ack"><h2>Territorial acknowledgement</h2><p style="margin:0">Concordia University is located on unceded Indigenous lands. The Kanien’kehá:ka Nation is recognized as the custodians of Tiohtià:ke/Montreal.</p></div></div>
+    </div>
+  </div>
+  <div class="deep"><div class="w1200">
+    Central <a href="#">514-848-2424</a> | Emergency <a href="#">514-848-3717</a>
+    <div class="l"><a href="#">Safety &amp; prevention</a>|<a href="#">Accessibility</a>|<a href="#">Privacy</a>|<a href="#">Terms</a>|<a href="#">Cookie settings</a>|<a href="#">Contact us</a>|<a href="#">Site feedback</a></div>
+    © Concordia University. Montreal, QC, Canada
+  </div></div>
+</footer>
+</body>
+</html>
