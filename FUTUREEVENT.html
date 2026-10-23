@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="https://use.typekit.net/paf7uxj.css">
+  <title>Concordia 4th Space Event (by URL)</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: "gill-sans-nova-condensed", sans-serif;
+      background: #111;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+
+    /* ---------- URL entry panel ---------- */
+    #urlPanel {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10000;
+      display: flex;
+      gap: 10px;
+      width: min(900px, 92vw);
+      padding: 14px;
+      background: rgba(0,0,0,0.85);
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 10px;
+      box-sizing: border-box;
+    }
+    #urlPanel.hidden { display: none; }
+    #urlInput {
+      flex: 1;
+      font-family: inherit;
+      font-size: 1.3rem;
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid #666;
+      background: #222;
+      color: #fff;
+      min-width: 0;
+    }
+    #urlInput::placeholder { color: #888; }
+    #loadBtn {
+      font-family: inherit;
+      font-size: 1.3rem;
+      padding: 10px 22px;
+      border-radius: 8px;
+      border: none;
+      background: #912338;
+      color: #fff;
+      cursor: pointer;
+    }
+    #loadBtn:hover { background: #b02b45; }
+    #statusMsg {
+      position: fixed;
+      top: 86px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10000;
+      color: #ccc;
+      font-size: 1.1rem;
+      text-align: center;
+      max-width: 90vw;
+    }
+    #statusMsg.error { color: #ff8a8a; }
+
+    /* ---------- Controls ---------- */
+    #zoom-controls {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 9999;
+      display: flex;
+      gap: 10px;
+    }
+    .zoom-button {
+      font-size: 2rem;
+      color: white;
+      background: rgba(255,255,255,0.2);
+      border: none;
+      border-radius: 8px;
+      width: 50px;
+      height: 50px;
+      cursor: pointer;
+      line-height: 1;
+      text-align: center;
+    }
+    .zoom-button:hover { background: rgba(255,255,255,0.4); }
+    .zoom-button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* ---------- Stage ---------- */
+    .event-container {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      max-width: 1920px;
+      max-height: 1080px;
+      aspect-ratio: 16/9;
+      overflow: hidden;
+      box-sizing: border-box;
+    }
+    @media (max-aspect-ratio: 16/9) {
+      .event-container { width: 100vw; height: calc(100vw * 9 / 16); }
+    }
+    @media (min-aspect-ratio: 16/9) {
+      .event-container { width: calc(100vh * 16 / 9); height: 100vh; }
+    }
+
+    .border-overlay {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      border: 6px solid white;
+      box-sizing: border-box;
+      z-index: 1000;
+      pointer-events: none;
+    }
+
+    .zoom-content {
+      position: absolute;
+      top: 6px; left: 6px;
+      width: calc(100% - 12px);
+      height: calc(100% - 12px);
+      overflow: hidden;
+    }
+
+    .event {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background-size: cover;
+      background-position: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      opacity: 0;
+      z-index: 0;
+      pointer-events: auto;
+      transition: opacity 1s ease-in-out;
+      background-repeat: no-repeat;
+      box-sizing: border-box;
+    }
+    .event.visible { opacity: 1; z-index: 1; }
+
+    .event::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      z-index: 0;
+    }
+
+    .event-overlay {
+      position: absolute;
+      width: 100%; height: 100%;
+      top: 0; left: 0;
+      z-index: 1;
+      transform-origin: 5.2% 44.4%;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding-left: 5.2%;
+      padding-bottom: 9.3%;
+      box-sizing: border-box;
+      gap: clamp(0.5rem, 2vw, 2rem);
+    }
+
+    .event-date {
+      max-width: 52%;
+      font-size: clamp(0.75rem, 2.25vw, 2.25rem);
+      font-weight: 100;
+      font-style: italic;
+      line-height: 1;
+      opacity: 0.9;
+      color: #ccc;
+      letter-spacing: 0.02em;
+    }
+
+    .event-subtitle {
+      max-width: 52%;
+      font-size: clamp(0.9rem, 2.4vw, 2.4rem);
+      font-weight: normal;
+      line-height: 1.1;
+      color: #ccc;
+      opacity: 0.9;
+      letter-spacing: 0.02em;
+    }
+
+    .event-title {
+      max-width: 52%;
+      font-size: clamp(2rem, 7.5vw, 7.5rem);
+      font-weight: bold;
+      line-height: 1;
+      opacity: 1.0;
+      color: #ccc;
+      word-break: keep-all;
+      overflow-wrap: break-word;
+    }
+
+    #loadingSpinner {
+      position: fixed;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      color: white;
+      font-size: 2rem;
+      font-family: sans-serif;
+      display: none;
+      z-index: 10001;
+    }
+
+    .emoji-eye {
+      display: inline-block;
+      width: 1em;
+      height: auto;
+      vertical-align: middle;
+      max-width: 1em;
+      max-height: 1em;
+      object-fit: contain;
+      line-height: 1;
+    }
+    .no-break-look {
+      white-space: nowrap !important;
+      display: inline-block;
+      word-break: keep-all;
+      overflow-wrap: normal;
+    }
+
+    #clock {
+      position: absolute;
+      top: 10%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 6rem;
+      opacity: 1.0;
+      color: #ccc;
+      z-index: 9999;
+      font-family: "gill-sans-nova-condensed", sans-serif;
+      font-weight: lighter;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="urlPanel">
+    <input id="urlInput" type="url" spellcheck="false" autocomplete="off"
+           placeholder="Paste event URL, e.g. https://www.concordia.ca/cuevents/offices/provost/fourth-space/2026/12/10/safe-or-secure.html" />
+    <button id="loadBtn" type="button">Load</button>
+  </div>
+  <div id="statusMsg"></div>
+  <div id="loadingSpinner">Loading event…</div>
+
+  <div class="event-container" id="eventContainer">
+    <div class="border-overlay"></div>
+    <div id="clock"></div>
+    <div class="zoom-content" id="zoomContent"></div>
+  </div>
+
+  <div id="zoom-controls">
+    <button class="zoom-button" onclick="togglePanel()" title="Enter a different URL">✎</button>
+    <button class="zoom-button" onclick="changeZoom(-0.1)" title="Zoom out">−</button>
+    <button class="zoom-button" onclick="changeZoom(0.1)" title="Zoom in">+</button>
+    <button class="zoom-button" id="linkBtn" onclick="openCurrentEventLink()" title="Open event page" disabled>∗</button>
+    <button class="zoom-button" id="saveBtn" onclick="saveAsPng()" title="Save as PNG"><span style="font-size: 1.5rem;">⬇</span></button>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+  <script>
+    // ================================================================
+    // SUBTITLE  ←  EDIT HERE (optional)
+    // Small line of text shown BETWEEN the date and the event title.
+    // You can also override it per load with ?subtitle=Some+text in the page URL.
+    // ================================================================
+    const SUBTITLE_TEXT = '';
+
+    // Where the clicker's "back" button (ArrowLeft / PageUp) should send the browser
+    const CLICKER_BACK_URL = 'https://cu4thspace.github.io/LOWERTHIRDS/L3byCSV.html';
+
+    // CORS fallbacks, tried in order if a direct fetch of the event page is blocked.
+    // These are third-party services; remove or replace with your own proxy if you prefer.
+    const CORS_PROXIES = [
+      u => 'https://corsproxy.io/?url=' + encodeURIComponent(u),
+      u => 'https://api.allorigins.win/raw?url=' + encodeURIComponent(u)
+    ];
+
+    function goFresh(baseUrl) {
+      const url = new URL(baseUrl);
+      url.searchParams.set('_', Date.now());
+      window.location.replace(url.toString());
+    }
+    window.addEventListener('pageshow', e => { if (e.persisted) location.reload(); });
+
+    let zoomLevel = 1;
+    let currentEventEl = null;
+
+    const urlPanel = document.getElementById('urlPanel');
+    const urlInput = document.getElementById('urlInput');
+    const statusMsg = document.getElementById('statusMsg');
+
+    function setStatus(msg, isError) {
+      statusMsg.textContent = msg || '';
+      statusMsg.className = isError ? 'error' : '';
+    }
+
+    function togglePanel(forceShow) {
+      const show = (typeof forceShow === 'boolean') ? forceShow : urlPanel.classList.contains('hidden');
+      urlPanel.classList.toggle('hidden', !show);
+      if (!show) setStatus('');
+      if (show) { urlInput.focus(); urlInput.select(); }
+    }
+
+    function changeZoom(delta) {
+      zoomLevel = Math.min(Math.max(zoomLevel + delta, 0.5), 2);
+      document.querySelectorAll('.event-overlay').forEach(o => {
+        o.style.transform = `scale(${zoomLevel})`;
+      });
+    }
+
+    function openCurrentEventLink() {
+      const url = currentEventEl?.dataset?.link;
+      if (url) window.open(url, '_blank');
+    }
+
+    document.addEventListener('keydown', function (e) {
+      if (e.target === urlInput) {
+        if (e.key === 'Enter') { e.preventDefault(); loadFromInput(); }
+        return;
+      }
+      if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+        e.preventDefault();
+        goFresh(CLICKER_BACK_URL);
+      }
+    });
+
+    document.getElementById('loadBtn').addEventListener('click', loadFromInput);
+
+    function processTitleWithEyes(title) {
+      const eye = '<img src="https://raw.githubusercontent.com/CU4thSpace/EVENTS/main/emoji-eyes.png" alt="👀" class="emoji-eye">';
+      let t = title
+        .replace(/L👀k:/g, `<span class="no-break-look">L${eye}k:</span>`)
+        .replace(/L👀K:/g, `<span class="no-break-look">L${eye}K:</span>`)
+        .replace(/L👀k/g,  `<span class="no-break-look">L${eye}k</span>`)
+        .replace(/L👀K/g,  `<span class="no-break-look">L${eye}K</span>`);
+      return t.replace(/:\s+/g, ':<br>');
+    }
+
+    // ---------- Fetching ----------
+    async function fetchText(url) {
+      const attempts = [u => u, ...CORS_PROXIES];
+      let lastErr;
+      for (const build of attempts) {
+        try {
+          const res = await fetch(build(url), { cache: 'no-store' });
+          if (!res.ok) throw new Error('HTTP ' + res.status);
+          const text = await res.text();
+          if (text && text.length > 500) return text;
+          throw new Error('Empty response');
+        } catch (err) {
+          lastErr = err;
+        }
+      }
+      throw lastErr || new Error('Fetch failed');
+    }
+
+    function meta(doc, name) {
+      const el = doc.querySelector(`meta[property="${name}"], meta[name="${name}"]`);
+      return el?.getAttribute('content')?.trim() || '';
+    }
+
+    function cleanTitle(t) {
+      return t.replace(/\s*\|\s*Events\s*-\s*Concordia University\s*$/i, '').trim();
+    }
+
+    function parseDate(doc, pageUrl) {
+      // 1) ts:start_date meta  →  "2026-12-10 11:00:00"
+      const start = meta(doc, 'ts:start_date');
+      let m = start.match(/^(\d{4})-(\d{2})-(\d{2})/);
+      // 2) fall back to /YYYY/MM/DD/ in the URL path
+      if (!m) m = pageUrl.pathname.match(/\/(\d{4})\/(\d{2})\/(\d{2})\//);
+      if (!m) return null;
+      return new Date(parseInt(m[1], 10), parseInt(m[2], 10) - 1, parseInt(m[3], 10));
+    }
+
+    function parseImage(doc, pageUrl) {
+      let src = meta(doc, 'og:image') || meta(doc, 'twitter:image:src') || meta(doc, 'twitter:image');
+      if (!src) {
+        const bodyImg = doc.querySelector('img[src*="_jcr_content"][src*="image.img"]')
+                     || doc.querySelector('.event-image img, main img, #content-main img');
+        src = bodyImg?.getAttribute('src') || '';
+      }
+      if (!src) return '';
+      try { return new URL(src, pageUrl).toString(); } catch (e) { return ''; }
+    }
+
+    function isValidEventUrl(str) {
+      try {
+        const u = new URL(str);
+        return /^https?:$/.test(u.protocol) && /(^|\.)concordia\.ca$/i.test(u.hostname);
+      } catch (e) { return false; }
+    }
+
+    // ---------- Render ----------
+    async function loadEvent(rawUrl) {
+      const spinner = document.getElementById('loadingSpinner');
+      const zoomContent = document.getElementById('zoomContent');
+
+      if (!isValidEventUrl(rawUrl)) {
+        setStatus('Please paste a full concordia.ca event URL.', true);
+        togglePanel(true);
+        return;
+      }
+
+      const pageUrl = new URL(rawUrl);
+      pageUrl.hash = '';
+      spinner.style.display = 'block';
+      setStatus('');
+
+      try {
+        const html = await fetchText(pageUrl.toString());
+        const doc = new DOMParser().parseFromString(html, 'text/html');
+
+        const h1 = doc.querySelector('h1')?.textContent.trim();
+        const title = h1 || cleanTitle(doc.querySelector('title')?.textContent || '') || 'Untitled';
+        const eventDate = parseDate(doc, pageUrl);
+        const imageUrl = parseImage(doc, pageUrl) || 'https://via.placeholder.com/1920x1080/111111/111111';
+
+        const qs = new URLSearchParams(location.search);
+        const subtitleText = qs.has('subtitle') ? qs.get('subtitle') : SUBTITLE_TEXT;
+
+        // Preload the image so the fade-in is clean
+        await new Promise(resolve => {
+          const img = new Image();
+          img.onload = resolve;
+          img.onerror = resolve;
+          img.src = imageUrl;
+        });
+
+        zoomContent.innerHTML = '';
+
+        const eventDiv = document.createElement('div');
+        eventDiv.className = 'event';
+        eventDiv.style.backgroundImage = `url("${imageUrl}")`;
+        eventDiv.dataset.link = pageUrl.toString();
+
+        const overlay = document.createElement('div');
+        overlay.className = 'event-overlay';
+
+        if (eventDate) {
+          const dateDiv = document.createElement('div');
+          dateDiv.className = 'event-date';
+          dateDiv.textContent = eventDate.toLocaleDateString('en-US',
+            { weekday: 'long', month: 'long', day: 'numeric' });
+          overlay.appendChild(dateDiv);
+        }
+
+        if (subtitleText) {
+          const subtitleDiv = document.createElement('div');
+          subtitleDiv.className = 'event-subtitle';
+          subtitleDiv.textContent = subtitleText;
+          overlay.appendChild(subtitleDiv);
+        }
+
+        const maxLength = 25;
+        const titleDiv = document.createElement('div');
+        titleDiv.className = 'event-title';
+        titleDiv.innerHTML = processTitleWithEyes(title);
+        if (title.length > maxLength) {
+          const scale = Math.max(0.7, maxLength / title.length);
+          titleDiv.style.fontSize = `clamp(${2 * scale}rem, ${7.5 * scale}vw, ${7.5 * scale}rem)`;
+        }
+        overlay.appendChild(titleDiv);
+
+        eventDiv.appendChild(overlay);
+        zoomContent.appendChild(eventDiv);
+        currentEventEl = eventDiv;
+
+        overlay.style.transform = `scale(${zoomLevel})`;
+        requestAnimationFrame(() => eventDiv.classList.add('visible'));
+
+        const linkBtn = document.getElementById('linkBtn');
+        linkBtn.disabled = false;
+        linkBtn.title = 'Open event page: ' + pageUrl.toString();
+
+        // Make the page bookmarkable / reloadable with the event baked in
+        const next = new URL(location.href);
+        next.searchParams.set('url', pageUrl.toString());
+        history.replaceState(null, '', next.toString());
+
+        togglePanel(false);
+      } catch (err) {
+        console.error('Event load failed:', err);
+        setStatus('Could not load that page (' + (err.message || err) + '). Check the URL, or the CORS note in the script.', true);
+        togglePanel(true);
+      } finally {
+        spinner.style.display = 'none';
+      }
+    }
+
+    function loadFromInput() {
+      const v = urlInput.value.trim();
+      if (v) loadEvent(v);
+    }
+
+    // ---------- Save PNG ----------
+    async function saveAsPng() {
+      if (!currentEventEl) return;
+      const saveBtn = document.getElementById('saveBtn');
+      const controls = document.getElementById('zoom-controls');
+      const clock = document.getElementById('clock');
+      const panelWasHidden = urlPanel.classList.contains('hidden');
+
+      saveBtn.disabled = true;
+      saveBtn.textContent = '…';
+      controls.style.display = 'none';
+      clock.style.display = 'none';
+      urlPanel.style.display = 'none';
+      statusMsg.style.display = 'none';
+
+      try {
+        const container = document.getElementById('eventContainer');
+        const canvas = await html2canvas(container, {
+          useCORS: true,
+          allowTaint: false,
+          scale: 2,
+          backgroundColor: '#111',
+          logging: false,
+          imageTimeout: 10000,
+        });
+
+        const titleText = currentEventEl.querySelector('.event-title')?.innerText || 'event';
+        const safeName = titleText
+          .replace(/[^a-z0-9]/gi, '_')
+          .replace(/_+/g, '_')
+          .toLowerCase()
+          .slice(0, 50);
+
+        const link = document.createElement('a');
+        link.download = `4thspace_${safeName}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+      } catch (err) {
+        console.error('PNG export failed:', err);
+        alert('Export failed — see console for details.');
+      } finally {
+        controls.style.display = '';
+        clock.style.display = '';
+        urlPanel.style.display = '';
+        statusMsg.style.display = '';
+        if (panelWasHidden) urlPanel.classList.add('hidden');
+        saveBtn.disabled = false;
+        saveBtn.textContent = '⬇';
+      }
+    }
+
+    // ---------- Clock ----------
+    function updateClock() {
+      const now = new Date();
+      const h = String(now.getHours()).padStart(2, '0');
+      const m = String(now.getMinutes()).padStart(2, '0');
+      const s = String(now.getSeconds()).padStart(2, '0');
+      document.getElementById('clock').textContent = `${h}:${m}:${s}`;
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    // ---------- Boot: auto-load from ?url= if present ----------
+    (function init() {
+      const initial = new URLSearchParams(location.search).get('url');
+      if (initial) {
+        urlInput.value = initial;
+        loadEvent(initial);
+      } else {
+        urlInput.focus();
+      }
+    })();
+  </script>
+
+</body>
+</html>
