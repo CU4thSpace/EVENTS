@@ -521,4 +521,288 @@
         const imageUrl = imgEl ? imgEl.src : 'https://via.placeholder.com/300';
 
         const descHeading = tmp.querySelector('h2')?.textContent?.trim() || '';
-        const descTime    =
+        const descTime    = tmp.querySelector('p')?.textContent?.trim()  || '';
+        const { date: parsedDate, startTimeStr } = parseEventTime(descTime);
+        let eventDate = parsedDate;
+        if (!eventDate) {
+          const pub = item.querySelector('pubDate')?.textContent;
+          eventDate  = pub ? new Date(pub) : new Date();
+        }
+
+        const eventDiv = buildSlide({
+          title, eventDate, startTimeStr, descHeading, imageUrl, link: itemLink
+        });
+        zoomContent.appendChild(eventDiv);
+        eventDivs.push(eventDiv);
+        imagePromises.push(preloadImage(imageUrl));
+      });
+
+      await Promise.all(imagePromises);
+      if (singleMode) return;
+      spinner.style.display = 'none';
+
+      allEvents = eventDivs;
+      currentEventIndex = 0;
+      if (eventDivs.length) eventDivs[0].classList.add('visible');
+
+      updateLinkButton();
+    }
+
+    /* ─────────────────────────────────────────────
+       Select a specific event by URL
+    ───────────────────────────────────────────── */
+    async function fetchText(url) {
+      const attempts = [u => u, ...CORS_PROXIES];
+      let lastErr;
+      for (const build of attempts) {
+        try {
+          const res = await fetch(build(url), { cache: 'no-store' });
+          if (!res.ok) throw new Error('HTTP ' + res.status);
+          const text = await res.text();
+          if (text && text.length > 500) return text;
+          throw new Error('Empty response');
+        } catch (err) {
+          lastErr = err;
+        }
+      }
+      throw lastErr || new Error('Fetch failed');
+    }
+
+    function meta(doc, name) {
+      const el = doc.querySelector(`meta[property="${name}"], meta[name="${name}"]`);
+      return el?.getAttribute('content')?.trim() || '';
+    }
+
+    function cleanTitle(t) {
+      return t.replace(/\s*\|\s*Events\s*-\s*Concordia University\s*$/i, '').trim();
+    }
+
+    /* Returns { date, startTimeStr } from the page's ts:start_date meta
+       ("2026-12-10 11:00:00"), falling back to /YYYY/MM/DD/ in the URL. */
+    function parseEventPageDate(doc, pageUrl) {
+      const start = meta(doc, 'ts:start_date');
+      const m = start.match(/^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2}))?/);
+      if (m) {
+        const date = new Date(parseInt(m[1], 10), parseInt(m[2], 10) - 1, parseInt(m[3], 10));
+        let startTimeStr = '';
+        if (m[4] !== undefined) {
+          const h24 = parseInt(m[4], 10), min = parseInt(m[5], 10);
+          if (h24 !== 0 || min !== 0) {
+            const suffix = h24 >= 12 ? 'p.m.' : 'a.m.';
+            const h12 = h24 % 12 === 0 ? 12 : h24 % 12;
+            startTimeStr = (min ? `${h12}:${String(min).padStart(2, '0')}` : `${h12}`) + '\u00A0' + suffix;
+          }
+        }
+        return { date, startTimeStr };
+      }
+      const p = pageUrl.pathname.match(/\/(\d{4})\/(\d{2})\/(\d{2})\//);
+      if (p) {
+        return {
+          date: new Date(parseInt(p[1], 10), parseInt(p[2], 10) - 1, parseInt(p[3], 10)),
+          startTimeStr: ''
+        };
+      }
+      return { date: null, startTimeStr: '' };
+    }
+
+    function parseEventPageImage(doc, pageUrl) {
+      let src = meta(doc, 'og:image') || meta(doc, 'twitter:image:src') || meta(doc, 'twitter:image');
+      if (!src) {
+        const bodyImg = doc.querySelector('img[src*="_jcr_content"][src*="image.img"]')
+                     || doc.querySelector('.event-image img, main img, #content-main img');
+        src = bodyImg?.getAttribute('src') || '';
+      }
+      if (!src) return '';
+      try { return new URL(src, pageUrl).toString(); } catch (e) { return ''; }
+    }
+
+    function isValidEventUrl(str) {
+      try {
+        const u = new URL(str);
+        return /^https?:$/.test(u.protocol) && /(^|\.)concordia\.ca$/i.test(u.hostname);
+      } catch (e) { return false; }
+    }
+
+    async function loadEventFromUrl(rawUrl) {
+      if (!isValidEventUrl(rawUrl)) {
+        setStatus('Please paste a full concordia.ca event URL.', true);
+        togglePanel(true);
+        return;
+      }
+
+      const pageUrl = new URL(rawUrl);
+      pageUrl.hash = '';
+      spinner.textContent = 'Loading event…';
+      spinner.style.display = 'block';
+      setStatus('');
+
+      try {
+        const html = await fetchText(pageUrl.toString());
+        const doc = new DOMParser().parseFromString(html, 'text/html');
+
+        const h1 = doc.querySelector('h1')?.textContent.trim();
+        const title = h1 || cleanTitle(doc.querySelector('title')?.textContent || '') || 'Untitled';
+        const { date: eventDate, startTimeStr } = parseEventPageDate(doc, pageUrl);
+        const imageUrl = parseEventPageImage(doc, pageUrl) || 'https://via.placeholder.com/1080/111111/111111';
+
+        await preloadImage(imageUrl);
+
+        singleMode = true;
+        const zoomContent = document.getElementById('zoomContent');
+        zoomContent.innerHTML = '';
+
+        const eventDiv = buildSlide({
+          title, eventDate, startTimeStr, descHeading: '', imageUrl, link: pageUrl.toString()
+        });
+        zoomContent.appendChild(eventDiv);
+
+        allEvents = [eventDiv];
+        currentEventIndex = 0;
+        requestAnimationFrame(() => eventDiv.classList.add('visible'));
+        updateLinkButton();
+
+        /* Make the page bookmarkable / reloadable with the event baked in */
+        const next = new URL(location.href);
+        next.searchParams.set('url', pageUrl.toString());
+        history.replaceState(null, '', next.toString());
+
+        togglePanel(false);
+      } catch (err) {
+        console.error('Event load failed:', err);
+        setStatus('Could not load that page (' + (err.message || err) + ').', true);
+        togglePanel(true);
+      } finally {
+        spinner.style.display = 'none';
+      }
+    }
+
+    function loadFromInput() {
+      const v = urlInput.value.trim();
+      if (v) loadEventFromUrl(v);
+    }
+
+    async function backToAllEvents() {
+      singleMode = false;
+      const next = new URL(location.href);
+      next.searchParams.delete('url');
+      history.replaceState(null, '', next.toString());
+      urlInput.value = '';
+      spinner.textContent = 'Loading events…';
+      spinner.style.display = 'block';
+      togglePanel(false);
+      try {
+        await fetchAndDisplayEvents();
+      } catch (err) {
+        console.error(err);
+        spinner.style.display = 'none';
+        setStatus('Could not load the events list.', true);
+      }
+    }
+
+    document.getElementById('loadBtn').addEventListener('click', loadFromInput);
+    document.getElementById('allBtn').addEventListener('click', backToAllEvents);
+
+    /* ─────────────────────────────────────────────
+       PNG export — always exactly 1080×1080 px.
+       Clones the container into a hidden off-screen
+       wrapper at native size so html2canvas never
+       sees viewport scaling or device pixel ratio.
+    ───────────────────────────────────────────── */
+    async function saveAsPng() {
+      const saveBtn  = document.getElementById('saveBtn');
+      const controls = document.getElementById('zoom-controls');
+      const clock    = document.getElementById('clock');
+      const source   = document.getElementById('eventContainer');
+
+      saveBtn.disabled = true;
+      saveBtn.textContent = '…';
+      controls.style.display = 'none';
+      clock.style.display    = 'none';
+
+      /* Build a wrapper that positions the clone at exactly 1080×1080,
+         off-screen so it never affects layout. */
+      const wrapper = document.createElement('div');
+      wrapper.style.cssText = [
+        'position:fixed',
+        'top:0', 'left:0',
+        'width:1080px', 'height:1080px',
+        'overflow:hidden',
+        'z-index:-9999',
+        'pointer-events:none',
+        'opacity:0',          /* invisible but still rendered */
+      ].join(';');
+
+      /* Deep-clone the container; strip any viewport scaling transform */
+      const clone = source.cloneNode(true);
+      clone.style.transform = 'none';
+      clone.style.width      = '1080px';
+      clone.style.height     = '1080px';
+      clone.style.position   = 'relative';
+      clone.style.top        = '0';
+      clone.style.left       = '0';
+
+      clone.querySelector('#clock')?.remove();
+
+      wrapper.appendChild(clone);
+      document.body.appendChild(wrapper);
+
+      try {
+        const canvas = await html2canvas(clone, {
+          useCORS: true,
+          allowTaint: false,
+          scale: 1,            /* 1 logical px → 1 canvas px = true 1080×1080 */
+          width: 1080,
+          height: 1080,
+          backgroundColor: '#111',
+          logging: false,
+          imageTimeout: 10000,
+        });
+
+        console.log(`Exported canvas: ${canvas.width}×${canvas.height}px`);
+
+        const titleText = allEvents[currentEventIndex]
+          ?.querySelector('.event-title')?.innerText || 'event';
+        const safeName = titleText
+          .replace(/[^a-z0-9]/gi, '_').replace(/_+/g, '_').toLowerCase().slice(0, 50);
+
+        const a = document.createElement('a');
+        a.download = `4thspace_${safeName}.png`;
+        a.href = canvas.toDataURL('image/png');
+        a.click();
+      } catch (err) {
+        console.error('PNG export failed:', err);
+        alert('Export failed — see console for details.');
+      } finally {
+        document.body.removeChild(wrapper);
+        controls.style.display = '';
+        clock.style.display    = '';
+        saveBtn.disabled = false;
+        saveBtn.textContent = '⬇';
+      }
+    }
+
+    /* ─────────────────────────────────────────────
+       Boot
+    ───────────────────────────────────────────── */
+    (function init() {
+      const initial = new URLSearchParams(location.search).get('url');
+      if (initial) {
+        urlInput.value = initial;
+        loadEventFromUrl(initial);
+      } else {
+        fetchAndDisplayEvents();
+      }
+    })();
+    setInterval(fetchAndDisplayEvents, 6 * 60 * 60 * 1000);
+
+    function updateClock() {
+      const n = new Date();
+      document.getElementById('clock').textContent =
+        [n.getHours(), n.getMinutes(), n.getSeconds()]
+          .map(v => String(v).padStart(2,'0')).join(':');
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+  </script>
+</body>
+</html>
