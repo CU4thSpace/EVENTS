@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black"/>
+  <link rel="stylesheet" href="https://use.typekit.net/paf7uxj.css">
+  <title>4thSpace Events Calendar</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #111;
+      color: #fff;
+      font-family: "gill-sans-nova-condensed", sans-serif;
+      -webkit-text-size-adjust: 100%;
+    }
+
+    /* Fixed 2048x1536 design stage, scaled to fit whatever the screen reports
+       (iPad 5th gen = 1024x768 CSS px @2x). */
+    #stage {
+      position: absolute;
+      top: 0; left: 0;
+      width: 2048px;
+      height: 1536px;
+      transform-origin: 0 0;
+      display: -webkit-box;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* 5 columns (Mon-Fri) x 4 rows (weeks) = 20 true squares.
+       5*360 + 4*14 = 1856 wide, 4*360 + 3*14 = 1482 tall. */
+    #grid {
+      display: grid;
+      grid-template-columns: repeat(5, 360px);
+      grid-template-rows: repeat(4, 360px);
+      gap: 14px;
+    }
+
+    .cell {
+      position: relative;
+      overflow: hidden;
+      border-radius: 10px;
+      border: 2px solid #444;
+      background: #222;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+    }
+    .cell.past  { opacity: 0.4; }
+    .cell.today { border: 4px solid #FFD600; }
+
+    /* Date badge, top-left of every square */
+    .date {
+      position: absolute;
+      top: 0; left: 0;
+      z-index: 5;
+      padding: 6px 14px 6px 12px;
+      font-size: 26px;
+      line-height: 1;
+      letter-spacing: 0.02em;
+      background: rgba(0, 0, 0, 0.78);
+      border-bottom-right-radius: 10px;
+    }
+    .cell.today .date { background: #FFD600; color: #111; }
+
+    /* Empty day */
+    .empty {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 20px 30px;
+      font-size: 42px;
+      line-height: 1.1;
+      color: #8a8a8a;
+    }
+
+    /* One event inside a square; several events split the square vertically */
+    .ev {
+      position: relative;
+      flex: 1 1 0;
+      min-height: 0;
+      overflow: hidden;
+    }
+    .ev + .ev { border-top: 2px solid #444; }
+
+    .ev img.bg {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .overlay {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100%;
+      box-sizing: border-box;
+      padding: 14px 20px;
+      background: rgba(0, 0, 0, 0.6);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+    }
+    /* keep the first event's text clear of the date badge */
+    .ev:first-of-type .overlay { padding-top: 44px; }
+
+    .title {
+      font-size: 40px;
+      line-height: 1.05;
+      margin-bottom: 8px;
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-line-clamp: 4;
+      -webkit-box-orient: vertical;
+      overflow-wrap: break-word;
+    }
+    .time {
+      font-size: 26px;
+      line-height: 1.1;
+      opacity: 0.9;
+    }
+
+    /* 2 events in one day */
+    .n2 .title { font-size: 28px; -webkit-line-clamp: 3; margin-bottom: 4px; }
+    .n2 .time  { font-size: 22px; }
+    .n2 .ev:first-of-type .overlay { padding-top: 40px; }
+    /* 3+ events in one day */
+    .n3 .title { font-size: 21px; -webkit-line-clamp: 2; margin-bottom: 2px; }
+    .n3 .time  { font-size: 17px; }
+    .n3 .overlay { padding: 6px 12px; }
+    .n3 .ev:first-of-type .overlay { padding-top: 34px; }
+
+    .emoji-eye {
+      display: inline-block;
+      width: 1em;
+      height: auto;
+      max-width: 1em;
+      max-height: 1em;
+      vertical-align: middle;
+      object-fit: contain;
+    }
+    .no-break-look { white-space: nowrap; display: inline-block; }
+  </style>
+</head>
+<body>
+  <div id="stage"><div id="grid"></div></div>
+
+  <script>
+    const RSS_URL = "https://www.concordia.ca/content/concordia/en/next-gen/4th-space/programming/RSSCAL/_jcr_content/content-main/grid_container_671899525/grid-container-parsys/events_list_88801239.xml";
+    const EYE = '<img src="https://raw.githubusercontent.com/CU4thSpace/EVENTS/refs/heads/main/emoji-eyes.png" alt="👀" class="emoji-eye">';
+
+    const WEEKS = 4;                           // rows
+    const EMPTY_TEXT = "Today Nothing Happens"; // text for days without events
+    const DAYS = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
+    const MONTHS = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
+    const MON_IDX = { Jan:1, Feb:2, Mar:3, Apr:4, May:5, Jun:6, Jul:7, Aug:8, Sep:9, Oct:10, Nov:11, Dec:12 };
+
+    let lastItems = [];
+
+    function pad(n) { return (n < 10 ? "0" : "") + n; }
+    function keyOf(d) { return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()); }
+
+    function decodeEntities(str = "") {
+      const txt = document.createElement("textarea");
+      txt.innerHTML = str;
+      return txt.value;
+    }
+
+    function processEmojiEyes(text) {
+      return text
+        .replace(/L👀k/g, '<span class="no-break-look">L' + EYE + 'k</span>')
+        .replace(/L👀K/g, '<span class="no-break-look">L' + EYE + 'K</span>');
+    }
+
+    function escapeHtml(s) {
+      return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    }
+
+    /* Event date comes from the feed's URL (…/2026/11/17/…), falling back to the
+       pubDate text ("Tue, 17 Nov 2026 14:00:00 -0500"). Both are read as written,
+       so no timezone conversion can shift an event to the wrong day. */
+    function eventKey(guid, pubDate) {
+      let m = /\/(\d{4})\/(\d{2})\/(\d{2})\//.exec(guid || "");
+      if (m) return m[1] + "-" + m[2] + "-" + m[3];
+      m = /(\d{1,2})\s+([A-Za-z]{3})\s+(\d{4})/.exec(pubDate || "");
+      if (m) return m[3] + "-" + pad(MON_IDX[m[2]] || 1) + "-" + pad(+m[1]);
+      return "";
+    }
+    function eventSort(pubDate) {
+      const m = /(\d{2}):(\d{2})/.exec(pubDate || "");
+      return m ? m[1] + m[2] : "0000";
+    }
+
+    function extractParts(description) {
+      const tmp = document.createElement("div");
+      tmp.innerHTML = description;
+      const img = tmp.querySelector("img");
+      const src = img ? img.src : "";
+      // First <p> reads "November 17, 2026, 2 p.m. - 5 p.m." -> keep only the time
+      const p = tmp.querySelector("p");
+      let time = "";
+      if (p) {
+        const t = p.textContent.trim();
+        const m = /\d{4},\s*(.*)$/.exec(t);
+        time = m ? m[1] : t;
+      }
+      return { src, time };
+    }
+
+    async function loadEvents() {
+      try {
+        const res = await fetch(`${RSS_URL}?t=${Date.now()}`, { cache: "no-store" });
+        const xml = new DOMParser().parseFromString(await res.text(), "application/xml");
+        lastItems = [...xml.querySelectorAll("item")].map(item => {
+          const guid = item.querySelector("guid")?.textContent || item.querySelector("link")?.textContent || "";
+          const pub = item.querySelector("pubDate")?.textContent || "";
+          const parts = extractParts(item.querySelector("description")?.textContent || "");
+          return {
+            key: eventKey(guid, pub),
+            sort: eventSort(pub),
+            title: decodeEntities(item.querySelector("title")?.textContent || "No title").trim(),
+            src: parts.src,
+            time: parts.time
+          };
+        }).filter(e => e.key);
+        render(lastItems);
+      } catch (err) {
+        console.error("Error fetching RSS feed:", err);
+        const grid = document.getElementById("grid");
+        if (lastItems.length) render(lastItems);          // keep showing last good data
+        else if (!grid.children.length) grid.textContent = "Failed to load feed.";
+      }
+    }
+
+    function render(items) {
+      const grid = document.getElementById("grid");
+      grid.innerHTML = "";
+
+      // Group events by day
+      const byDay = {};
+      items.forEach(e => { (byDay[e.key] = byDay[e.key] || []).push(e); });
+      Object.keys(byDay).forEach(k => byDay[k].sort((a, b) => a.sort < b.sort ? -1 : 1));
+
+      // Start on this week's Monday (on Sat/Sun, start on the coming Monday)
+      const now = new Date();
+      const todayKey = keyOf(now);
+      const start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const dow = start.getDay();                 // 0 = Sun … 6 = Sat
+      start.setDate(start.getDate() + (dow === 0 ? 1 : dow === 6 ? 2 : 1 - dow));
+
+      for (let w = 0; w < WEEKS; w++) {
+        for (let d = 0; d < 5; d++) {
+          const day = new Date(start.getFullYear(), start.getMonth(), start.getDate() + w * 7 + d);
+          const key = keyOf(day);
+          const events = byDay[key] || [];
+
+          const cell = document.createElement("div");
+          cell.className = "cell" + (key === todayKey ? " today" : key < todayKey ? " past" : "");
+          if (events.length >= 3) cell.className += " n3";
+          else if (events.length === 2) cell.className += " n2";
+
+          const badge = document.createElement("div");
+          badge.className = "date";
+          badge.textContent = DAYS[day.getDay()] + " " + MONTHS[day.getMonth()] + " " + day.getDate();
+          cell.appendChild(badge);
+
+          if (!events.length) {
+            const empty = document.createElement("div");
+            empty.className = "empty";
+            empty.textContent = EMPTY_TEXT;
+            cell.appendChild(empty);
+          } else {
+            events.forEach(e => {
+              const ev = document.createElement("div");
+              ev.className = "ev";
+              if (e.src) {
+                const img = document.createElement("img");
+                img.className = "bg";
+                img.src = e.src;
+                ev.appendChild(img);
+              }
+              const overlay = document.createElement("div");
+              overlay.className = "overlay";
+
+              const title = document.createElement("div");
+              title.className = "title";
+              title.innerHTML = processEmojiEyes(escapeHtml(e.title));
+
+              const time = document.createElement("div");
+              time.className = "time";
+              time.textContent = e.time;
+
+              overlay.appendChild(title);
+              overlay.appendChild(time);
+              ev.appendChild(overlay);
+              cell.appendChild(ev);
+            });
+          }
+          grid.appendChild(cell);
+        }
+      }
+    }
+
+    /* Scale the 2048x1536 stage to fit the screen */
+    function fit() {
+      const s = Math.min(window.innerWidth / 2048, window.innerHeight / 1536);
+      const x = (window.innerWidth - 2048 * s) / 2;
+      const y = (window.innerHeight - 1536 * s) / 2;
+      document.getElementById("stage").style.transform =
+        "translate(" + x + "px," + y + "px) scale(" + s + ")";
+    }
+    window.addEventListener("resize", fit);
+    window.addEventListener("orientationchange", fit);
+    fit();
+
+    loadEvents();
+    setInterval(loadEvents, 5 * 60 * 1000); // refresh every 5 minutes (also rolls "today" over)
+  </script>
+</body>
+</html>
