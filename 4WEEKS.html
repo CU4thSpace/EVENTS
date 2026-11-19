@@ -53,7 +53,7 @@
       display: flex;
       flex-direction: column;
     }
-    .cell.past  { opacity: 0.4; }
+    .cell.past  { -webkit-filter: grayscale(1); filter: grayscale(1); opacity: 0.5; }
     .cell.today { border: 4px solid #FFD600; }
 
     /* Date badge, top-left of every square */
@@ -221,6 +221,28 @@
       return { src, time };
     }
 
+    /* The feed drops events once they're over, so remember them on this device
+       and keep showing them (greyed out) for the rest of the visible weeks. */
+    const STORE_KEY = "4sp-events-v1";
+    function loadStored() {
+      try { return JSON.parse(localStorage.getItem(STORE_KEY) || "[]"); } catch (e) { return []; }
+    }
+    function saveStored(list) {
+      try { localStorage.setItem(STORE_KEY, JSON.stringify(list)); } catch (e) {}
+    }
+    function mergeWithHistory(fresh) {
+      const now = new Date();
+      const todayKey = keyOf(now);
+      const cutoff = keyOf(new Date(now.getFullYear(), now.getMonth(), now.getDate() - 60));
+      const seen = {};
+      fresh.forEach(e => { seen[e.id] = true; });
+      // only past events are carried over; future events that vanish from the feed stay gone
+      const old = loadStored().filter(e => e.key < todayKey && !seen[e.id]);
+      const all = fresh.concat(old);
+      saveStored(all.filter(e => e.key >= cutoff));
+      return all;
+    }
+
     async function loadEvents() {
       try {
         const res = await fetch(`${RSS_URL}?t=${Date.now()}`, { cache: "no-store" });
@@ -230,6 +252,7 @@
           const pub = item.querySelector("pubDate")?.textContent || "";
           const parts = extractParts(item.querySelector("description")?.textContent || "");
           return {
+            id: guid,
             key: eventKey(guid, pub),
             sort: eventSort(pub),
             title: decodeEntities(item.querySelector("title")?.textContent || "No title").trim(),
@@ -237,6 +260,7 @@
             time: parts.time
           };
         }).filter(e => e.key);
+        lastItems = mergeWithHistory(lastItems);
         render(lastItems);
       } catch (err) {
         console.error("Error fetching RSS feed:", err);
