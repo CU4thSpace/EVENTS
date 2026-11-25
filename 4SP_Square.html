@@ -214,13 +214,16 @@
       letter-spacing: 0.02em;
     }
 
-    /* ── clock — same position but in square space ── */
+    /* ── clock — positioned to match the 16:9 page ──
+       top = vertical centre of the digits; translate(-50%, -50%) centres on that point,
+       so changing font-size won't shift the clock. */
     #clock {
       position: absolute;
-      top: 9%;
+      top: 9.8%;
       left: 50%;
-      transform: translateX(-50%);
-      font-size: 5rem;
+      transform: translate(-50%, -50%);
+      font-size: 6rem;
+      line-height: 1;
       color: #ccc;
       z-index: 9999;
       font-family: "gill-sans-nova-condensed", sans-serif;
