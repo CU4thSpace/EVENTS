@@ -460,7 +460,7 @@
         const dateDiv = document.createElement('div');
         dateDiv.className = 'event-date';
         const dateLabel = eventDate.toLocaleDateString('en-US', {weekday:'long',month:'long',day:'numeric'});
-        dateDiv.textContent = startTimeStr ? `${dateLabel}  ${startTimeStr}` : dateLabel;
+        dateDiv.textContent = startTimeStr ? `${dateLabel} at ${startTimeStr}` : dateLabel;
         overlay.appendChild(dateDiv);
       }
 
