@@ -91,6 +91,12 @@
       overflow: hidden;
     }
     .ev + .ev { border-top: 2px solid #444; }
+    a.ev {
+      display: block;
+      color: inherit;
+      text-decoration: none;
+      -webkit-tap-highlight-color: rgba(255, 214, 0, 0.35);
+    }
 
     .ev img.bg {
       position: absolute;
@@ -165,6 +171,7 @@
 
     const WEEKS = 4;                           // rows
     const EMPTY_TEXT = "Today Nothing Happens"; // text for days without events
+    const LINK_TARGET = "_blank";               // "_blank" = new tab / Safari; "_self" = same page
     const DAYS = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
     const MONTHS = ["JAN","FEB","MAR","APR","MAY","JUN","JUL","AUG","SEP","OCT","NOV","DEC"];
     const MON_IDX = { Jan:1, Feb:2, Mar:3, Apr:4, May:5, Jun:6, Jul:7, Aug:8, Sep:9, Oct:10, Nov:11, Dec:12 };
@@ -184,6 +191,14 @@
       return text
         .replace(/L👀k/g, '<span class="no-break-look">L' + EYE + 'k</span>')
         .replace(/L👀K/g, '<span class="no-break-look">L' + EYE + 'K</span>');
+    }
+
+    /* The feed links to Concordia's internal CMS path
+       (…/content/shared/en/events/…); the public page lives at …/cuevents/… */
+    function eventUrl(id) {
+      return (id || "")
+        .replace(/^http:\/\//, "https://")
+        .replace("/content/shared/en/events/", "/cuevents/");
     }
 
     function escapeHtml(s) {
@@ -309,8 +324,11 @@
             cell.appendChild(empty);
           } else {
             events.forEach(e => {
-              const ev = document.createElement("div");
+              const ev = document.createElement("a");
               ev.className = "ev";
+              ev.href = eventUrl(e.id);
+              ev.target = LINK_TARGET;
+              ev.rel = "noopener";
               if (e.src) {
                 const img = document.createElement("img");
                 img.className = "bg";
