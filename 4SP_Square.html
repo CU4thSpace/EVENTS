@@ -825,6 +825,19 @@
     }
     setInterval(updateClock, 1000);
     updateClock();
+
+    /* ─────────────────────────────────────────────
+       Reload the page at local midnight so the day's
+       events are refreshed. Any ?url= parameter is kept
+       in the address bar, so a URL-selected event
+       reloads as the same event.
+    ───────────────────────────────────────────── */
+    function scheduleMidnightReload() {
+      const now = new Date();
+      const nextMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 5); // 00:00:05
+      setTimeout(() => location.reload(), nextMidnight - now);
+    }
+    scheduleMidnightReload();
   </script>
 </body>
 </html>
